@@ -20,7 +20,7 @@ lexer grammar Literals;
 import Alphabet, Symbol;
 
 IDENTIFIER_
-    : LBT_? DQ_? [a-zA-Z_$#][a-zA-Z0-9_$#]* DQ_? RBT_?
+    : LBT_? DQ_? [a-zA-Z_$#\u0080-\uFFFF][a-zA-Z0-9_$#\u0080-\uFFFF\\@/]* DQ_? RBT_?
     ;
 
 STRING_
@@ -54,10 +54,18 @@ BIT_NUM_
     : '0b' ('0' | '1')+ | B SQ_ ('0' | '1')+ SQ_
     ;
 
+NCHAR_TEXT
+    : N STRING_
+    ;
+
 fragment DIGIT
     : [0-9]
     ;
 
 fragment HEX_
     : [0-9a-fA-F]
+    ;
+
+NAME_
+    : LBT_ [a-zA-Z_$#\\/@. ]+ RBT_
     ;

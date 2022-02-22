@@ -18,9 +18,9 @@
 package org.apache.shardingsphere.proxy.frontend.spi;
 
 import org.apache.shardingsphere.db.protocol.codec.DatabasePacketCodecEngine;
-import org.apache.shardingsphere.proxy.backend.communication.jdbc.connection.BackendConnection;
+import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 import org.apache.shardingsphere.proxy.frontend.context.FrontendContext;
-import org.apache.shardingsphere.proxy.frontend.auth.AuthenticationEngine;
+import org.apache.shardingsphere.proxy.frontend.authentication.AuthenticationEngine;
 import org.apache.shardingsphere.proxy.frontend.command.CommandExecuteEngine;
 import org.apache.shardingsphere.infra.database.type.DatabaseTypeAwareSPI;
 
@@ -28,6 +28,14 @@ import org.apache.shardingsphere.infra.database.type.DatabaseTypeAwareSPI;
  * Database protocol frontend engine.
  */
 public interface DatabaseProtocolFrontendEngine extends DatabaseTypeAwareSPI {
+    
+    /**
+     * Set database version.
+     * 
+     * @param databaseVersion database version
+     */
+    default void setDatabaseVersion(String databaseVersion) {
+    }
     
     /**
      * Get frontend context.
@@ -48,7 +56,7 @@ public interface DatabaseProtocolFrontendEngine extends DatabaseTypeAwareSPI {
      * 
      * @return authentication engine
      */
-    AuthenticationEngine getAuthEngine();
+    AuthenticationEngine getAuthenticationEngine();
     
     /**
      * Get command execute engine.
@@ -60,7 +68,7 @@ public interface DatabaseProtocolFrontendEngine extends DatabaseTypeAwareSPI {
     /**
      * Release resource.
      * 
-     * @param backendConnection backend connection
+     * @param connectionSession connection session
      */
-    void release(BackendConnection backendConnection);
+    void release(ConnectionSession connectionSession);
 }

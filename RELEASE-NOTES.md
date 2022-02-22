@@ -1,3 +1,322 @@
+## 5.1.0
+
+### New feature
+
+1. Support SQL hint
+1. New DistSQL syntax: SHOW AUTHORITY RULE
+1. New DistSQL syntax: SHOW TRANSACTION RULE
+1. New DistSQL syntax: ALTER TRANSACTION RULE
+1. New DistSQL syntax: SHOW SQL_PARSER RULE
+1. New DistSQL syntax: ALTER SQL_PARSER RULE
+1. New DistSQL syntax: ALTER DEFAULT SHARDING STRATEGY
+1. New DistSQL syntax: DROP DEFAULT SHARDING STRATEGY
+1. New DistSQL syntax: CREATE DEFAULT SINGLE TABLE RULE
+1. New DistSQL syntax: SHOW SINGLE TABLES
+1. New DistSQL syntax: SHOW SINGLE TABLE RULES
+1. New DistSQL syntax: SHOW SHARDING TABLE NODES
+1. New DistSQL syntax: CREATE/ALTER/DROP SHARDING KEY GENERATOR
+1. New DistSQL syntax: SHOW SHARDING KEY GENERATORS
+1. New DistSQL syntax: REFRESH TABLE METADATA
+1. New DistSQL syntax: PARSE SQL, Output the abstract syntax tree obtained by parsing SQL
+1. New DistSQL syntax: SHOW UNUSED SHARDING ALGORITHMS
+1. New DistSQL syntax: SHOW UNUSED SHARDING KEY GENERATORS
+1. New DistSQL syntax: CREATE/DROP SHARDING SCALING RULE
+1. New DistSQL syntax: ENABLE/DISABLE SHARDING SCALING RULE
+1. New DistSQL syntax: SHOW SHARDING SCALING RULES
+1. New DistSQL syntax: SHOW INSTANCE MODE
+1. New DistSQL syntax: COUNT SCHEMA RULES
+1. Scaling: Add `rateLimiter` configuration and `QPS` `TPS` implementation
+1. Scaling: Add `DATA_MATCH` data consistency check
+1. Scaling: Add `batchSize` configuration to avoid possible OOME
+1. Scaling: Add `streamChannel` configuration and `MEMORY` implementation
+1. Scaling: Support MySQL BINARY data type
+1. Scaling: Support MySQL YEAR data type
+1. Scaling: Support PostgreSQL BIT data type
+1. Scaling: Support PostgreSQL MONEY data type
+1. Database discovery adds support for JDBC Spring Boot
+1. Database discovery adds support for JDBC Spring Namespace
+1. Database discovery adds support for openGauss
+1. Shadow DB adds support for logical data source transfer
+1. Add data type validator for column matching shadow algorithm
+1. Add support for xa start/end/prepare/commit/recover in encrypt case with only one data source
+
+### API Change
+
+1. Redesign the database discovery related DistSQL syntax
+1. In DistSQL, the keyword GENERATED_KEY is adjusted to KEY_GENERATE_STRATEGY
+1. Native authority provider is marked as deprecated and will be removed in a future version
+1. Scaling: Move scaling configuration from server.yaml to config-sharding.yaml
+1. Scaling: Rename clusterAutoSwitchAlgorithm SPI to completionDetector and refactor method parameter
+1. Scaling: Data consistency check API method rename and return type change
+1. Database discovery module API refactoring
+1. Readwrite-splitting supports static and dynamic configuration
+1. Shadow DB remove the enable configuration
+1. Shadow algorithm type modified
+
+### Enhancement
+
+1. Improve load multi single table performance
+1. Remove automatically added order by primary key clause
+1. Optimize binding table route logic without sharding column in join condition
+1. Support update sharding key when the sharding routing result keep the same
+1. Optimize rewrite engine performance
+1. Support select union/union all ... statements by federation engine
+1. Support insert on duplicate key update sharding column when route context keep same
+1. Use union all to merge sql route units for simple select to improve performance
+1. Supports autocommit in ShardingSphere-Proxy
+1. ShardingSphere openGauss Proxy supports sha256 authentication method
+1. Remove property java.net.preferIPv4Stack=true from Proxy startup script
+1. Remove the verification of null rules for JDBC
+1. Optimize performance of executing openGauss batch bind
+1. Disable Netty resource leak detector by default
+1. Supports describe prepared statement in PostgreSQL / openGauss Proxy
+1. Optimize performance of executing PostgreSQL batched inserts
+1. Add instance_id to the result of SHOW INSTANCE LIST
+1. Support to use instance_id to perform operations when enable/disable a proxy instance
+1. Support auto creative algorithm when `CREATE SHARDING TABLE RULE`, reducing the steps of creating rule
+1. Support specifying an existing KeyGenerator when CREATE SHARDING TABLE RULE
+1. DROP DATABASE supports IF EXISTS option
+1. DATANODES in SHARDING TABLE RULE supports enumerated inline expressions
+1. CREATE/ALTER SHARDING TABLE RULE supports complex sharding algorithm
+1. SHOW SHARDING TABLE NODES supports non-inline scenarios (range, time, etc.)
+1. When there is only one read data source in the readwrite-splitting rule, it is not allowed to be disabled
+1. Scaling: Add basic support of chunked streaming data consistency check
+1. Shadow algorithm decision logic optimization to improve performance
+
+### Refactor
+
+1. Refactor federation engine scan table logic
+1. Avoid duplicated TCL SQL parsing when executing prepared statement in Proxy
+1. Scaling: Add pipeline modules to redesign scaling
+1. Scaling: Refactor several job configuration structure
+1. Scaling: Precalculate tasks splitting and persist in job configuration
+1. Scaling: Add basic support of pipeline-core code reuse for encryption job
+1. Scaling: Add basic support of scaling job and encryption job combined running
+1. Scaling: Add `input` and `output` configuration, including `workerThread` and `rateLimiter`
+1. Scaling: Move `blockQueueSize` into `streamChannel`
+1. Scaling: Change jobId type from integer to text
+1. Optimize JDBC to load only the specified schema
+1. Optimize meta data structure of the registry center
+1. Rename Note shadow algorithm to HINT shadow algorithm
+
+### Bug Fix
+
+1. Support parsing function
+1. Fix alter table drop constrain
+1. Fix optimize table route
+1. Support Route resource group
+1. Support parsing binlog
+1. Support postgreSql/openGauss '&' and '|' operator
+1. Support parsing openGauss insert on duplicate key
+1. Support parse postgreSql/openGauss union
+1. Support query which table has column contains keyword
+1. Fix missing parameter in function
+1. Fix sub query table with no alias
+1. Fix utc timestamp function
+1. Fix alter encrypt column
+1. Support alter column with position encrypt column
+1. Fix delete with schema for postgresql
+1. Fix wrong route result caused by oracle parser ambiguity
+1. Fix projection count error when use sharding and encrypt
+1. Fix npe when using shadow and readwrite_splitting
+1. Fix wrong metadata when actual table is case insensitive
+1. Fix encrypt rewrite exception when execute multiple table join query
+1. Fix encrypt rewrite wrong result with table level queryWithCipherColumn
+1. Fix parsing chinese
+1. Fix encrypt exists sub query
+1. Fix full route caused by the MySQL BINARY keyword in the sharding condition
+1. Fix getResultSet method empty result exception when using JDBCMemoryQueryResult processing statement
+1. Fix incorrect shard table validation logic when creating store function/procedure
+1. Fix null charset exception occurs when connecting Proxy with some PostgreSQL client
+1. Fix executing commit in prepared statement cause transaction status incorrect in MySQL Proxy
+1. Fix client connected to Proxy may stuck if error occurred in PostgreSQL with non English locale
+1. Fix file not found when path of configurations contains blank character
+1. Fix transaction status may be incorrect cause by early flush
+1. Fix the unsigned datatype problem when query with PrepareStatement
+1. Fix protocol violation in implementations of prepared statement in MySQL Proxy
+1. Fix caching too many connections in openGauss batch bind
+1. Fix the problem of missing data in SHOW READWRITE_SPLITTING RULES when db-discovery and readwrite-splitting are used together
+1. Fix the problem of missing data in SHOW READWRITE_SPLITTING READ RESOURCES when db-discovery and readwrite-splitting are used together
+1. Fix the NPE when the CREATE SHARDING TABLE RULE statement does not specify the sub-database and sub-table strategy
+1. Fix NPE when PREVIEW SQL by schema.table
+1. Fix DISABLE statement could disable readwrite-splitting write data source in some cases
+1. Fix DIABLE INSTANCE could disable the current instance in some cases
+1. Fix the issue that user may query the unauthorized logic schema when the provider is SCHEMA_PRIVILEGES_PERMITTED
+1. Fix NPE when authority provider is not configured
+1. Scaling: Fix DB connection leak on XA initialization which triggered by data consistency check
+1. Scaling: Fix PostgreSQL replication stream exception on multiple data sources
+1. Scaling: Fix migrating updated record exception on PostgreSQL incremental phase
+1. Scaling: Fix MySQL 5.5 check BINLOG_ROW_IMAGE option failure
+1. Scaling: Fix PostgreSQL xml data type consistency check
+1. Fix database discovery failed to modify cron configuration
+1. Fix single read data source use weight loadbalance algorithm error
+1. Fix create redundant data souce without memory mode
+1. Fix column value matching shadow algorithm data type conversion exception
+
+### Change Log
+
+1. [MILESTONE](https://github.com/apache/shardingsphere/milestone/17)
+
+## 5.0.0
+
+### New feature
+
+1. Support parsing SQL comment
+1. New DistSQL syntax: shadow rule management
+1. New DistSQL syntax: scaling job management
+1. New DistSQL syntax: disable proxy instance
+1. New DistSQL syntax: disable readwrite-splitting read data source
+1. New DistSQL syntax: `DROP SHARDING ALGORITHM`
+1. New DistSQL syntax: `ALTER RESOURCE`
+1. New DistSQL syntax: `CREATE SHARDING ALGORITHM`
+1. New DistSQL syntax: `CREATE DEFAULT SHARDING [TABLE | DATABASE] STRATEGY`
+1. New DistSQL syntax: `SHOW ALL VARIABLE`
+1. New DistSQL syntax：`SHOW VARIABLE variableName;`
+1. Support `3` modes, including Memory, Standalone and Cluster mode
+1. Proxy supports for openGauss
+1. Scaling: Add basic support for openGauss
+1. Scaling: Add incremental task completion detect algorithm SPI interface
+1. Scaling: Add data consistency check algorithm SPI interface
+1. Scaling: Basic support of create table on target automatically for MySQL and openGauss
+1. Scaling: Support auto switch cluster configuration when job finished
+1. Scaling: Add more DistSQL support such as data consistency check, etc
+
+### API Change
+
+1. Add schema name configuration for ShardingSphere-JDBC
+1. Add default sharding column configuration
+1. Change the default authority provider from `NATIVE` to `ALL_PRIVILEGES_PERMITTED`
+1. SCTL syntax adjustment, merged with DistSQL RAL syntax
+1. `SHOW RESOURCES` DistSQL is adjusted to `SHOW SCHEMA RESOURCES`
+1. Remove `shadow` logical field, support shadow algorithm
+
+### Enhancement
+
+1. Support parsing MySQL union/union all statement
+1. Support PostgreSQL `ABORT` statement
+1. Refactor and improve metadata loading process
+1. Support PostgreSQL `CREATE INDEX` statement to generate index automatically when no index is specified
+1. Support SQL statement execution with logical schema
+1. Support binding tables configuration with different sharding columns
+1. Optimize kernel performance
+1. Proxy supports queries to part of information_schema tables to optimize client connection experience
+1. DistSQL supports using quotation marks to use keywords as parameter names
+1. The password in the `ADD RESOURCE` statement supports special characters
+1. `ADD RESOURCE` supports custom JDBC parameters and connection pool properties
+1. `DROP RESOURCE` supports optional parameter `ignore single tables`, used to ignore single table rule restrictions
+1. Support the use of DistSQL to create sharding table rule based on readwrite-splitting rules
+1. `SHOW DATABASES` statement supports like syntax
+1. `CREATE SHARDING TABLE RULE` supports the use of inline expressions to specify resources
+1. `CREATE SHARDING TABLE RULE` supports configuration using `dataNodes`
+1. `CREATE SHARDING TABLE RULE` supports reuse of existing algorithms
+1. `SET VARIABLE`, support to modify proxy configuration   
+1. PostgreSQL's protocol enhancements (Such as supports Portal, unspecified type)
+1. Using Netty executor to optimize Proxy performance in specified scenarios
+1. Make memory strictly fetch size configurable in Proxy
+1. Scaling: Improve support for PostgreSQL
+1. Scaling: Support concurrent data consistency check of source and target side
+
+### Refactor
+
+1. Refactor the SingleTable feature to support Encrypt multiple data sources
+1. Adjust the persistent data structure of the registry center state node
+1. Remove the SQL rewrite of DML for Shadow
+1. Support the SQL routing of DDL for Shadow
+1. Scaling: Refactor default implementation of incremental task completion detect algorithm
+1. Scaling: Refactor default implementation of data consistency check algorithm
+1. Scaling: Remove HTTP API and binary distribution
+
+### Bug Fix
+
+1. Fix sharding interval algorithm
+1. Fix `SHOW INDEX FROM TABLE FROM TABLE` statement rewrite exception
+1. Fix Encrypt multi tables join query rewrite exception
+1. Fix subquery index out of range exception
+1. Fix wrong result of Oracle paging query
+1. Fix the rewrite exception when KeyGenerateStrategy is not configured in the Sharding feature
+1. Fix federation executor engine exception caused by Oracle dialect case
+1. Fix Sharding and Encrypt integration usage rewrite exception
+1. Fix Oracle metadata loading exception
+1. Fix the issue that `SHOW RESOURCES` statement cannot display custom attributes
+1. Fix the issue that SQL execution exception is not thrown
+1. Fix Etcd can not send node added event
+1. Fix PostgreSQL rows contains null value may be missing in query result
+1. Fix PostgreSQL metadata columns are out-of-order
+1. Fix client character set may be incorrect in Proxy
+
+### Change Log
+
+1. [MILESTONE](https://github.com/apache/shardingsphere/milestone/16)
+
+## 5.0.0-beta
+
+### New feature
+
+1. New DistSQL to load and show all the ShardingSphere configuration rules
+1. Support join SQL from different database instances
+1. Support multiple backend database types for new feature of database gateway
+1. Support creating and updating the authentication online
+1. Add new automated agent module
+
+### API Change
+
+1. `QueryReplica` configuration item is replaced by `read-write-splitting`
+1. `Authentication` configuration item of ShardingProxy is replaced by `AUTHORITY`
+1. Optimize the datasource configuration for ShardingJDBC with `dataSourceClassName`
+1. New API for automated sharding table configuration to provide standard and automated sharding tables
+1. Remove configuration item `acceptor-size` from ShardingProxy
+1. Create a built-in sharding algorithm SPI which allows users to directly configure the class name as in 4.x
+
+### Enhancement
+
+1. Improve metadata loading process distinctly
+1. Greatly enhance the SQL parsing for Oracle, SQLServer and PostgreSQL
+1. Support loading privileges from MySQL/PostgreSQL/SQLServer/Oracle
+1. Support DDL statement for encryption feature
+1. Support rewrite owner table name of projection if using sharding and encrypt together
+1. When using `SELECT *` from encrypt SQL, add quote char for rewritten column to avoid conflict with keyword
+1. Support PostgreSQL JSON/JSONB/pattern matching operator parse
+1. Support MySQL/PostgreSQL `CREATE/ALTER/DROP TABLESPACE` statement
+1. Support PostgreSQL `PREPARE, EXECUTE, DEALLOCATE` statement
+1. Support PostgreSQL `EXPLAIN` statement
+1. Support PostgreSQL `START/END TRANSACTION` statement
+1. Support PostgreSQL `ALTER/DROP INDEX` statement
+1. Support CREATE `TABLESPACE` of PostgreSQL
+1. Support MySQL `CREATE LOADABLE FUNCTION` statement
+1. Support MySQL/PostgreSQL `ALTER TABLE RENAME` statement
+1. Support PostgreSQL Close command
+
+### Refactor
+
+1. New schema structure in registry center
+1. Remove Nacos and Apollo config center support
+1. ShardingScaling leverages elasticJob as its job distribution
+1. Refactor the metadata content and its update process
+
+### Bug Fix
+
+1. Bug fix for cannot use `SELECT * wildcard` when readwrite-splitting only
+1. Fix instance error when the custom sharding algorithm does not match the configuration type.
+1. Fix NoSuchTableException when execute drop table if exists statement
+1. Fix wrong table rewrite in `UPDATE ... SET ...` statement
+1. Fix wrong table rewrite in CREATE/ALTER TABLE statement foreign key reference table
+1. Fix projection owner check exception when exist subquery temporary table
+1. Fix Oracle/SQL92 `SELECT ... WHERE ... LIKE` statement class cast exception
+1. Fix MySQL `SELECT EXISTS ... FROM ...` statement parse error
+1. Fix wrong result of SHOW INDEX statement
+1. Fix SELECT `... GROUP BY ...` statement rewrite and merge result error
+1. Fix CREATE TABLE statement rewrite error for encrypt
+1. Fix exception occur in PostgreSQL Proxy when reading text format parameter values
+1. Enhance the support of array object for PostgreSQL Proxy
+1. Fix the bug of Datetype casting for ShardingProxy
+1. PostgreSQL Proxy supports using numeric type 
+1. Fix PostgreSQL Proxy transaction command complete packet's tag incorrect
+1. Fix PostgreSQL Proxy may return packet which is not expected by client
+
+### Change Log
+
+1. [MILESTONE](https://github.com/apache/shardingsphere/milestone/14)
+
 ## 5.0.0-alpha
 
 ### Build & Dependencies
@@ -103,7 +422,7 @@
 1. Use multiple threads to load metadata for different data sources
 1. Support `allow.range.query.with.inline.sharding` option
 1. The docker of ShardingSphere-Proxy supports loading external lib packages
-1. Support integration with Spring using @ShardingTransactionType
+1. Support integration with Spring using @ShardingSphereTransactionType
 1. Enhance ShardingDataSource to compatible with Seata in micro-service distribution transaction
 
 ### Refactor

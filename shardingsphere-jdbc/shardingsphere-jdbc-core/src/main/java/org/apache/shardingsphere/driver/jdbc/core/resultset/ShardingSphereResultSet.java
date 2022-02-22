@@ -17,6 +17,7 @@
 
 package org.apache.shardingsphere.driver.jdbc.core.resultset;
 
+import org.apache.commons.collections4.map.CaseInsensitiveMap;
 import org.apache.shardingsphere.driver.jdbc.adapter.AbstractResultSetAdapter;
 import org.apache.shardingsphere.infra.executor.sql.context.ExecutionContext;
 import org.apache.shardingsphere.infra.merge.result.MergedResult;
@@ -24,6 +25,7 @@ import org.apache.shardingsphere.infra.merge.result.MergedResult;
 import java.io.InputStream;
 import java.io.Reader;
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.net.URL;
 import java.sql.Array;
 import java.sql.Blob;
@@ -43,7 +45,6 @@ import java.time.LocalTime;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * ShardingSphere result set.
@@ -67,7 +68,7 @@ public final class ShardingSphereResultSet extends AbstractResultSetAdapter {
     }
     
     private Map<String, Integer> createColumnLabelAndIndexMap(final ResultSetMetaData resultSetMetaData) throws SQLException {
-        Map<String, Integer> result = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, Integer> result = new CaseInsensitiveMap<>(resultSetMetaData.getColumnCount(), 1);
         for (int columnIndex = resultSetMetaData.getColumnCount(); columnIndex > 0; columnIndex--) {
             result.put(resultSetMetaData.getColumnLabel(columnIndex), columnIndex);
         }
@@ -367,10 +368,17 @@ public final class ShardingSphereResultSet extends AbstractResultSetAdapter {
     @SuppressWarnings("unchecked")
     @Override
     public <T> T getObject(final int columnIndex, final Class<T> type) throws SQLException {
-        if (LocalDateTime.class.equals(type) || LocalDate.class.equals(type) || LocalTime.class.equals(type)) {
+        if (BigInteger.class.equals(type)) {
+            return (T) BigInteger.valueOf(getLong(columnIndex));
+        } else if (Blob.class.equals(type)) {
+            return (T) getBlob(columnIndex);
+        } else if (Clob.class.equals(type)) {
+            return (T) getClob(columnIndex);
+        } else if (LocalDateTime.class.equals(type) || LocalDate.class.equals(type) || LocalTime.class.equals(type)) {
             return (T) ResultSetUtil.convertValue(mergeResultSet.getValue(columnIndex, Timestamp.class), type);
+        } else {
+            return (T) ResultSetUtil.convertValue(mergeResultSet.getValue(columnIndex, type), type);
         }
-        throw new SQLFeatureNotSupportedException("getObject with type");
     }
     
     @Override

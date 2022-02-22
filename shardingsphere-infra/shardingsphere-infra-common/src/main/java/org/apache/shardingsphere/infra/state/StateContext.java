@@ -17,9 +17,7 @@
 
 package org.apache.shardingsphere.infra.state;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import org.apache.shardingsphere.infra.lock.LockContext;
+import com.google.common.eventbus.Subscribe;
 
 import java.util.Collections;
 import java.util.Deque;
@@ -29,44 +27,37 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 /**
  * State context.
  */
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StateContext {
     
-    private static final Deque<StateType> CURRENT_STATE = new ConcurrentLinkedDeque<>(Collections.singleton(StateType.OK));
+    private final Deque<StateType> currentState = new ConcurrentLinkedDeque<>(Collections.singleton(StateType.OK));
     
     /**
      * Switch state.
      *
-     * @param event state event
+     * @param type state type
+     * @param on true if state type is valid, false if not            
      */
-    public static void switchState(final StateEvent event) {
-        if (event.isOn()) {
-            CURRENT_STATE.push(event.getType());
+    @Subscribe
+    public void switchState(final StateType type, final boolean on) {
+        if (on) {
+            currentState.push(type);
         } else {
-            if (getCurrentState() == event.getType()) {
+            if (getCurrentState().equals(type)) {
                 recoverState();
             }
         }
-        signalAll();
     }
     
-    private static void signalAll() {
-        if (getCurrentState() == StateType.LOCK) {
-            return;
-        }
-        LockContext.signalAll();
+    private void recoverState() {
+        currentState.pop();
     }
     
     /**
      * Get current state.
      * 
-     * @return current state
+     * @return current state type
      */
-    public static StateType getCurrentState() {
-        return Optional.ofNullable(CURRENT_STATE.peek()).orElse(StateType.OK);
-    }
-    
-    private static void recoverState() {
-        CURRENT_STATE.pop();
+    public StateType getCurrentState() {
+        return Optional.ofNullable(currentState.peek()).orElse(StateType.OK);
     }
 }

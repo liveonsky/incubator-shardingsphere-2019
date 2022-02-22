@@ -17,7 +17,7 @@
 
 grammar DCLStatement;
 
-import Symbol, Keyword, OracleKeyword, Literals, BaseRule;
+import BaseRule;
 
 grant
     : GRANT (objectPrivilegeClause | systemPrivilegeClause | roleClause)
@@ -320,4 +320,16 @@ dropRole
 
 alterRole
     : ALTER ROLE
+    ;
+
+setRole
+    : SET ROLE (roleAssignment | allClause | NONE)
+    ;
+
+roleAssignment
+    : roleName (IDENTIFIED BY password)? (COMMA_ roleName (IDENTIFIED BY password)? )*
+    ;
+
+allClause
+    : ALL (EXCEPT roleName (COMMA_ roleName)*)?
     ;

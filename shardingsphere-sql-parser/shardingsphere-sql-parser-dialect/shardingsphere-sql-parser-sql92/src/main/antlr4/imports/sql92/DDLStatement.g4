@@ -17,7 +17,7 @@
 
 grammar DDLStatement;
 
-import Symbol, Keyword, SQL92Keyword, Literals, BaseRule, DMLStatement;
+import BaseRule, DMLStatement;
 
 createTable
     : CREATE createTableSpecification? TABLE tableName (createDefinitionClause | createLikeClause)
@@ -101,7 +101,7 @@ keyPart
     ;
 
 constraintDefinition
-    : (CONSTRAINT ignoredIdentifier?)? (primaryKeyOption | uniqueOption | foreignKeyOption)
+    : (CONSTRAINT constraintName?)? (primaryKeyOption | uniqueOption | foreignKeyOption)
     ;
 
 primaryKeyOption
@@ -152,4 +152,3 @@ addConstraintSpecification
 dropConstraintSpecification
     : DROP constraintDefinition
     ;
-

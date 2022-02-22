@@ -52,7 +52,9 @@ execute
     | alterResourceGroup
     | createResourceGroup
     | dropResourceGroup
-    | preparedStatement
+    | prepare
+    | executeStmt
+    | deallocate
     | setTransaction
     | beginTransaction
     | setAutoCommit
@@ -116,6 +118,11 @@ execute
     | uninstall
     | unlock
     | xa
+    | createLoadableFunction
+    | createTablespace
+    | alterTablespace
+    | dropTablespace
+    | delimiter
     ) (SEMI_ EOF? | EOF)
     | EOF
     ;

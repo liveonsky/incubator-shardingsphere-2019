@@ -21,6 +21,7 @@ import Keyword, PostgreSQLKeyword, Symbol, Literals;
 
 parameterMarker
     : QUESTION_ literalsType?
+    | DOLLAR_ numberLiterals
     ;
 
 reservedKeyword
@@ -112,11 +113,7 @@ literalsType
     ;
 
 identifier
-    : unicodeEscapes? IDENTIFIER_ uescape? |  unreservedWord 
-    ;
-
-unicodeEscapes
-    : ('U' | 'u') AMPERSAND_
+    : UNICODE_ESCAPE? IDENTIFIER_ uescape? |  unreservedWord 
     ;
 
 uescape
@@ -208,6 +205,7 @@ unreservedWord
     | EXECUTE
     | EXPLAIN
     | EXPRESSION
+    | EXTENDED
     | EXTENSION
     | EXTERNAL
     | FAMILY
@@ -260,6 +258,7 @@ unreservedWord
     | LOCK
     | LOCKED
     | LOGGED
+    | MAIN
     | MAPPING
     | MATCH
     | MATERIALIZED
@@ -304,6 +303,7 @@ unreservedWord
     | PARTITION
     | PASSING
     | PASSWORD
+    | PLAIN
     | PLANS
     | POLICY
     | PRECEDING
@@ -423,6 +423,9 @@ unreservedWord
     | YEAR
     | YES
     | ZONE
+    | JSON
+    | PARAM
+    | TABLE
     ;
 
 typeFuncNameKeyword
@@ -487,6 +490,10 @@ indexName
     : identifier
     ;
 
+constraintName
+    : identifier
+    ;
+
 alias
     : identifier
     ;
@@ -495,14 +502,34 @@ primaryKey
     : PRIMARY? KEY
     ;
 
-logicalOperator
-    : OR | OR_ | AND | AND_
+andOperator
+    : AND | AND_
+    ;
+
+orOperator
+    : OR | OR_
     ;
 
 comparisonOperator
     : EQ_ | GTE_ | GT_ | LTE_ | LT_ | NEQ_
     ;
 
+patternMatchingOperator
+    : LIKE
+    | TILDE_TILDE_
+    | NOT LIKE
+    | NOT_TILDE_TILDE_
+    | ILIKE
+    | ILIKE_
+    | NOT ILIKE
+    | NOT_ILIKE_
+    | SIMILAR TO
+    | NOT SIMILAR TO
+    | TILDE_
+    | NOT_ TILDE_
+    | TILDE_ ASTERISK_
+    | NOT_ TILDE_ ASTERISK_
+    ;
 
 cursorName
     : name
@@ -521,23 +548,15 @@ aExpr
     | aExpr SLASH_ aExpr
     | aExpr MOD_ aExpr
     | aExpr CARET_ aExpr
-    | aExpr comparisonOperator aExpr
+    | aExpr AMPERSAND_ aExpr
+    | aExpr VERTICAL_BAR_ aExpr
     | aExpr qualOp aExpr
     | qualOp aExpr
     | aExpr qualOp
+    | aExpr comparisonOperator aExpr
     | NOT aExpr
-    | aExpr LIKE aExpr
-    | aExpr LIKE aExpr ESCAPE aExpr
-    | aExpr NOT LIKE aExpr
-    | aExpr NOT LIKE aExpr ESCAPE aExpr
-    | aExpr ILIKE aExpr
-    | aExpr ILIKE aExpr ESCAPE aExpr
-    | aExpr NOT ILIKE aExpr
-    | aExpr NOT ILIKE aExpr ESCAPE aExpr
-    | aExpr SIMILAR TO aExpr
-    | aExpr SIMILAR TO aExpr ESCAPE aExpr
-    | aExpr NOT SIMILAR TO aExpr
-    | aExpr NOT SIMILAR TO aExpr ESCAPE aExpr
+    | aExpr patternMatchingOperator aExpr
+    | aExpr patternMatchingOperator aExpr ESCAPE aExpr
     | aExpr IS NULL
     | aExpr ISNULL
     | aExpr IS NOT NULL
@@ -568,7 +587,8 @@ aExpr
     | aExpr IS unicodeNormalForm NORMALIZED
     | aExpr IS NOT NORMALIZED
     | aExpr IS NOT unicodeNormalForm NORMALIZED
-    | aExpr logicalOperator aExpr
+    | aExpr andOperator aExpr
+    | aExpr orOperator aExpr
     | DEFAULT
     ;
 
@@ -656,9 +676,7 @@ columnref
     ;
 
 qualOp
-    : mathOperator
-    | TILDE_TILDE_
-    | NOT_TILDE_TILDE_
+    : jsonOperator
     | OPERATOR LP_ anyOperator RP_
     ;
 
@@ -667,8 +685,8 @@ subqueryOp
     | OPERATOR LP_ anyOperator RP_
     | LIKE
     | NOT LIKE
-    | ILIKE
-    | NOT ILIKE
+    | TILDE_
+    | NOT_ TILDE_
     ;
 
 allOp
@@ -735,6 +753,23 @@ mathOperator
     | LTE_
     | GTE_
     | NEQ_
+    ;
+
+jsonOperator
+    : JSON_EXTRACT_ # jsonExtract
+    | JSON_EXTRACT_TEXT_ # jsonExtractText
+    | JSON_PATH_EXTRACT_ # jsonPathExtract
+    | JSON_PATH_EXTRACT_TEXT_ # jsonPathExtractText
+    | JSONB_CONTAIN_RIGHT_ # jsonbContainRight
+    | JSONB_CONTAIN_LEFT_ # jsonbContainLeft
+    | QUESTION_ # jsonbContainTopKey
+    | QUESTION_ VERTICAL_BAR_ # jsonbContainAnyTopKey
+    | JSONB_CONTAIN_ALL_TOP_KEY_ # jsonbContainAllTopKey
+    | OR_ # jsonbConcat
+    | MINUS_ # jsonbDelete
+    | JSONB_PATH_DELETE_ # jsonbPathDelete
+    | JSONB_PATH_CONTAIN_ANY_VALUE_ # jsonbPathContainAnyValue
+    | JSONB_PATH_PREDICATE_CHECK_ # jsonbPathPredicateCheck
     ;
 
 qualAllOp
@@ -1809,4 +1844,11 @@ event
 typeNameList
     : typeName (COMMA_ typeName)*
     ;
-
+    
+notExistClause
+    : IF NOT EXISTS
+    ;
+    
+existClause
+    : IF EXISTS
+    ;

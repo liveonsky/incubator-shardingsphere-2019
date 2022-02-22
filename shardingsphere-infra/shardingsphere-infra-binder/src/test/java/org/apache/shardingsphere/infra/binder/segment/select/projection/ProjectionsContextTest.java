@@ -18,14 +18,16 @@
 package org.apache.shardingsphere.infra.binder.segment.select.projection;
 
 import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.AggregationDistinctProjection;
-import org.apache.shardingsphere.sql.parser.sql.common.constant.AggregationType;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.AggregationProjection;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.ColumnProjection;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.DerivedProjection;
 import org.apache.shardingsphere.infra.binder.segment.select.projection.impl.ShorthandProjection;
+import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.sql.parser.sql.common.constant.AggregationType;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -34,6 +36,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.Mockito.mock;
 
 public final class ProjectionsContextTest {
     
@@ -103,7 +106,7 @@ public final class ProjectionsContextTest {
     @Test
     public void assertGetAggregationDistinctProjections() {
         Projection projection = getAggregationDistinctProjection();
-        List<AggregationDistinctProjection> items = new ProjectionsContext(0, 0, true, Arrays.asList(projection, getColumnProjection())).getAggregationDistinctProjections();
+        Collection<AggregationDistinctProjection> items = new ProjectionsContext(0, 0, true, Arrays.asList(projection, getColumnProjection())).getAggregationDistinctProjections();
         assertTrue(items.contains(projection));
         assertThat(items.size(), is(1));
     }
@@ -121,11 +124,12 @@ public final class ProjectionsContextTest {
     }
     
     private AggregationProjection getAggregationProjection() {
-        return new AggregationProjection(AggregationType.COUNT, "(column)", "c");
+        return new AggregationProjection(AggregationType.COUNT, "(column)", "c", mock(DatabaseType.class));
     }
     
     private AggregationDistinctProjection getAggregationDistinctProjection() {
-        return new AggregationDistinctProjection(0, 0, AggregationType.COUNT, "(DISTINCT column)", "c", "column");
+        return new AggregationDistinctProjection(
+                0, 0, AggregationType.COUNT, "(DISTINCT column)", "c", "column", mock(DatabaseType.class));
     }
     
     @Test

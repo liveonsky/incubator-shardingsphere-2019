@@ -33,9 +33,14 @@ execute
     | truncateTable
     | setTransaction
     | beginTransaction
+    | startTransaction
+    | end
     | commit
     | rollback
+    | abort
     | savepoint
+    | releaseSavepoint
+    | rollbackToSavepoint
     | grant
     | revoke
     | createUser
@@ -48,21 +53,65 @@ execute
     | set
     | resetParameter
     | call
+    | alterAggregate
+    | alterCollation
     | alterFunction
     | alterDatabase
+    | alterDomain
+    | alterDefaultPrivileges
+    | alterForeignDataWrapper
+    | alterForeignTable
+    | alterGroup
+    | alterMaterializedView
     | alterProcedure
     | alterServer
+    | alterSequence
     | createDatabase
     | createFunction
     | createProcedure
     | createServer
     | createTrigger
     | createView
+    | createSequence
+    | createDomain
+    | createRule
+    | createSchema
+    | createType
+    | createTextSearch
+    | declare
+    | discard
     | dropDatabase
     | dropFunction
     | dropProcedure
     | dropServer
     | dropTrigger
     | dropView
+    | dropSequence
+    | dropDomain
+    | dropSchema
+    | vacuum
+    | prepare
+    | executeStmt
+    | deallocate
+    | explain
+    | analyzeTable
+    | load
+    | createTablespace
+    | alterTablespace
+    | dropTablespace
+    | setConstraints
+    | copy
+    | createLanguage
+    | alterLanguage
+    | dropLanguage
+    | createConversion
+    | alterConversion
+    | dropConversion
+    | alterTextSearchDictionary
+    | alterTextSearchTemplate
+    | alterTextSearchParser
+    | createExtension
+    | alterExtension
+    | dropExtension
     ) SEMI_?
     ;

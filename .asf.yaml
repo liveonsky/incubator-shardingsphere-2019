@@ -21,19 +21,35 @@ notifications:
   pullrequests: notifications@shardingsphere.apache.org
 
 github:
-  description: Distributed database middleware
+  description: Ecosystem to transform any database into a distributed database system, and enhance it with sharding, elastic scaling, encryption features & more
   labels:
-    - shardingsphere
+    - database-plus
     - database
     - distributed-database
     - distributed-sql-database
     - distributed-transactions
-    - sql
-    - shard
     - database-cluster
+    - rdbms
+    - sql
     - mysql
     - postgresql
-    - middleware
+    - shard
+    - encrypt
+    - dba
+    - oltp
+    - bigdata
   features:
     issues: true
     projects: true
+    wiki: true
+  protected_branches:
+    master:
+      required_status_checks:
+        strict: true
+      required_pull_request_reviews:
+        dismiss_stale_reviews: true
+        required_approving_review_count: 1
+  collaborators:
+    - booooodv
+    - yy2so
+    - zhujunxxxxx

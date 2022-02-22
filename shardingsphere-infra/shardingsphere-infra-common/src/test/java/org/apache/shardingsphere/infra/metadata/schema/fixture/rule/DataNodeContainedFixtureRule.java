@@ -18,24 +18,35 @@
 package org.apache.shardingsphere.infra.metadata.schema.fixture.rule;
 
 import org.apache.shardingsphere.infra.datanode.DataNode;
-import org.apache.shardingsphere.infra.rule.type.DataNodeContainedRule;
-import org.apache.shardingsphere.infra.rule.type.TableContainedRule;
+import org.apache.shardingsphere.infra.rule.identifier.type.DataNodeContainedRule;
+import org.apache.shardingsphere.infra.rule.identifier.type.TableContainedRule;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 
 public final class DataNodeContainedFixtureRule implements DataNodeContainedRule, TableContainedRule {
     
-    @Override
-    public Map<String, Collection<DataNode>> getAllDataNodes() {
-        return null;
+    private final Map<String, String> actualTableNameMaps = new HashMap<>(4, 1);
+    
+    public DataNodeContainedFixtureRule() {
+        actualTableNameMaps.putIfAbsent("data_node_routed_table1_0", "data_node_routed_table1");
+        actualTableNameMaps.putIfAbsent("data_node_routed_table1_1", "data_node_routed_table1");
+        actualTableNameMaps.putIfAbsent("data_node_routed_table2_0", "data_node_routed_table2");
+        actualTableNameMaps.putIfAbsent("data_node_routed_table2_1", "data_node_routed_table2");
     }
     
     @Override
-    public Collection<String> getAllActualTables() {
-        return Arrays.asList("data_node_routed_table_0", "data_node_routed_table_2");
+    public Map<String, Collection<DataNode>> getAllDataNodes() {
+        return Collections.emptyMap();
+    }
+    
+    @Override
+    public Collection<DataNode> getDataNodesByTableName(final String tableName) {
+        return Collections.emptyList();
     }
     
     @Override
@@ -50,11 +61,26 @@ public final class DataNodeContainedFixtureRule implements DataNodeContainedRule
     
     @Override
     public Optional<String> findLogicTableByActualTable(final String actualTable) {
-        return Optional.empty();
+        return Optional.ofNullable(actualTableNameMaps.get(actualTable));
     }
     
     @Override
     public Collection<String> getTables() {
-        return Arrays.asList("data_node_routed_table_0", "data_node_routed_table_1");
+        return new HashSet<>(actualTableNameMaps.values());
+    }
+    
+    @Override
+    public Optional<String> findActualTableByCatalog(final String catalog, final String logicTable) {
+        return Optional.empty();
+    }
+    
+    @Override
+    public Collection<String> getAllTables() {
+        return Collections.emptyList();
+    }
+    
+    @Override
+    public String getType() {
+        return DataNodeContainedFixtureRule.class.getSimpleName();
     }
 }

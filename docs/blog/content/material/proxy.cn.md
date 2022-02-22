@@ -1,10 +1,8 @@
 +++
 title = "揭秘Sharding-Proxy——面向DBA的数据库中间层"
-weight = 13
+weight = 1
 chapter = true
 +++
-
-## 揭秘Sharding-Proxy——面向DBA的数据库中间层
 
 ### 讲师介绍
 

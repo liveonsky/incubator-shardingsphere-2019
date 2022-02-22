@@ -22,18 +22,13 @@
     <parent>
         <groupId>org.apache.shardingsphere</groupId>
         <artifactId>shardingsphere</artifactId>
-        <version>5.0.0-RC1-SNAPSHOT</version>
+        <version>5.1.1-SNAPSHOT</version>
     </parent>
     <artifactId>shardingsphere-proxy</artifactId>
     <packaging>pom</packaging>
     <name>${project.artifactId}</name>
     
-    <properties>
-        <maven.deploy.skip>true</maven.deploy.skip>
-    </properties>
-    
     <modules>
-        <module>shardingsphere-proxy-common</module>
         <module>shardingsphere-proxy-frontend</module>
         <module>shardingsphere-proxy-backend</module>
         <module>shardingsphere-proxy-bootstrap</module>

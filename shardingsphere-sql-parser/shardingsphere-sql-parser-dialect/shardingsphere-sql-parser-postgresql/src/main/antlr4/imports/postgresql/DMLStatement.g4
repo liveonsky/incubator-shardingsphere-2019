@@ -17,7 +17,7 @@
 
 grammar DMLStatement;
 
-import Symbol, Keyword, PostgreSQLKeyword, Literals, BaseRule;
+import BaseRule;
 
 insert
     : withClause? INSERT INTO insertTarget insertRest optOnConflict? returningClause?
@@ -74,7 +74,7 @@ setClause
     ;
 
 setTarget
-    : colId optIndirection
+    : colId
     ;
 
 setTargetList
@@ -519,10 +519,6 @@ copyOptItem
 
 copyDelimiter
     : (USING)? DELIMITERS STRING_
-    ;
-
-deallocate
-    : DEALLOCATE PREPARE? (name | ALL)
     ;
 
 fetch

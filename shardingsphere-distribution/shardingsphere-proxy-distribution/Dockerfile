@@ -15,11 +15,11 @@
 # limitations under the License.
 #
 
-FROM java:8
+FROM openjdk:8-jdk-slim
 MAINTAINER ShardingSphere "dev@shardingsphere.apache.org"
 
 ARG APP_NAME
-ENV LOCAL_PATH /opt/sharding-proxy
+ENV LOCAL_PATH /opt/shardingsphere-proxy
 
 ADD target/${APP_NAME}.tar.gz /opt
 RUN mv /opt/${APP_NAME} ${LOCAL_PATH}

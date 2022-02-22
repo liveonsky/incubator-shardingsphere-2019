@@ -1,10 +1,8 @@
 +++
 title = "快讯！Apache ShardingSphere进入CNCF全景图"
-weight = 6
+weight = 8
 chapter = true
 +++
-
-## 快讯！Apache ShardingSphere进入CNCF全景图
 
 ### CNCF
 

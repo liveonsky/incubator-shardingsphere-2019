@@ -18,13 +18,15 @@
 package org.apache.shardingsphere.infra.hint;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 /**
  * The manager that use hint to inject sharding key directly through {@code ThreadLocal}.
@@ -34,18 +36,21 @@ public final class HintManager implements AutoCloseable {
     
     private static final ThreadLocal<HintManager> HINT_MANAGER_HOLDER = new ThreadLocal<>();
     
-    private final Multimap<String, Comparable<?>> databaseShardingValues = HashMultimap.create();
+    private final Multimap<String, Comparable<?>> databaseShardingValues = ArrayListMultimap.create();
     
-    private final Multimap<String, Comparable<?>> tableShardingValues = HashMultimap.create();
+    private final Multimap<String, Comparable<?>> tableShardingValues = ArrayListMultimap.create();
     
     private boolean databaseShardingOnly;
     
-    private boolean primaryRouteOnly;
+    private boolean writeRouteOnly;
+    
+    @Setter
+    private String dataSourceName;
     
     /**
      * Get a new instance for {@code HintManager}.
      *
-     * @return  {@code HintManager} instance
+     * @return {@code HintManager} instance
      */
     public static HintManager getInstance() {
         Preconditions.checkState(null == HINT_MANAGER_HOLDER.get(), "Hint has previous value, please clear first.");
@@ -139,26 +144,60 @@ public final class HintManager implements AutoCloseable {
     }
     
     /**
-     * Set database operation force route to primary database only.
+     * Set database operation force route to write database only.
      */
-    public void setPrimaryRouteOnly() {
-        primaryRouteOnly = true;
+    public void setWriteRouteOnly() {
+        writeRouteOnly = true;
     }
     
     /**
-     * Judge whether route to primary database only or not.
+     * Set database routing to be automatic.
+     */
+    public void setReadwriteSplittingAuto() {
+        writeRouteOnly = false;
+    }
+    
+    /**
+     * Judge whether route to write database only or not.
      *
-     * @return route to primary database only or not
+     * @return route to write database only or not
      */
-    public static boolean isPrimaryRouteOnly() {
-        return null != HINT_MANAGER_HOLDER.get() && HINT_MANAGER_HOLDER.get().primaryRouteOnly;
+    public static boolean isWriteRouteOnly() {
+        return null != HINT_MANAGER_HOLDER.get() && HINT_MANAGER_HOLDER.get().writeRouteOnly;
     }
     
     /**
-     * Clear threadlocal for hint manager.
+     * Clear thread local for hint manager.
      */
     public static void clear() {
         HINT_MANAGER_HOLDER.remove();
+    }
+    
+    /**
+     * Clear sharding values.
+     */
+    public void clearShardingValues() {
+        databaseShardingValues.clear();
+        tableShardingValues.clear();
+        databaseShardingOnly = false;
+    }
+    
+    /**
+     * Judge whether hint manager instantiated or not.
+     *
+     * @return whether hint manager instantiated or not
+     */
+    public static boolean isInstantiated() {
+        return null != HINT_MANAGER_HOLDER.get();
+    }
+    
+    /**
+     * Get data source name.
+     *
+     * @return dataSource name
+     */
+    public static Optional<String> getDataSourceName() {
+        return Optional.ofNullable(HINT_MANAGER_HOLDER.get()).map(hintManager -> hintManager.dataSourceName);
     }
     
     @Override

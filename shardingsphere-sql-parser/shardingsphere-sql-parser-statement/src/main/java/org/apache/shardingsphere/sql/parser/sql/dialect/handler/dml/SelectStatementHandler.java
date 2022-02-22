@@ -21,10 +21,15 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.pagination.limit.LimitSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.predicate.LockSegment;
+import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.ModelSegment;
+import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.WindowSegment;
+import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.WithSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.SelectStatement;
 import org.apache.shardingsphere.sql.parser.sql.dialect.handler.SQLStatementHandler;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.MySQLStatement;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.dml.MySQLSelectStatement;
+import org.apache.shardingsphere.sql.parser.sql.dialect.statement.opengauss.OpenGaussStatement;
+import org.apache.shardingsphere.sql.parser.sql.dialect.statement.opengauss.dml.OpenGaussSelectStatement;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.oracle.OracleStatement;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.oracle.dml.OracleSelectStatement;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.postgresql.PostgreSQLStatement;
@@ -61,6 +66,9 @@ public final class SelectStatementHandler implements SQLStatementHandler {
         if (selectStatement instanceof SQLServerStatement) {
             return ((SQLServerSelectStatement) selectStatement).getLimit();
         }
+        if (selectStatement instanceof OpenGaussStatement) {
+            return ((OpenGaussSelectStatement) selectStatement).getLimit();
+        }
         return Optional.empty();
     }
     
@@ -79,6 +87,54 @@ public final class SelectStatementHandler implements SQLStatementHandler {
         }
         if (selectStatement instanceof PostgreSQLStatement) {
             return ((PostgreSQLSelectStatement) selectStatement).getLock();
+        }
+        if (selectStatement instanceof OpenGaussStatement) {
+            return ((OpenGaussSelectStatement) selectStatement).getLock();
+        }
+        return Optional.empty();
+    }
+    
+    /**
+     * Get window segment.
+     *
+     * @param selectStatement select statement
+     * @return window segment
+     */
+    public static Optional<WindowSegment> getWindowSegment(final SelectStatement selectStatement) {
+        if (selectStatement instanceof MySQLStatement) {
+            return ((MySQLSelectStatement) selectStatement).getWindow();
+        }
+        if (selectStatement instanceof PostgreSQLStatement) {
+            return ((PostgreSQLSelectStatement) selectStatement).getWindow();
+        }
+        if (selectStatement instanceof OpenGaussStatement) {
+            return ((OpenGaussSelectStatement) selectStatement).getWindow();
+        }
+        return Optional.empty();
+    }
+    
+    /**
+     * Get with segment.
+     *
+     * @param selectStatement select statement
+     * @return with segment
+     */
+    public static Optional<WithSegment> getWithSegment(final SelectStatement selectStatement) {
+        if (selectStatement instanceof OracleStatement) {
+            return selectStatement.getWithSegment();
+        }
+        return Optional.empty();
+    }
+    
+    /**
+     * Get model segment.
+     *
+     * @param selectStatement select statement
+     * @return model segment
+     */
+    public static Optional<ModelSegment> getModelSegment(final SelectStatement selectStatement) {
+        if (selectStatement instanceof OracleStatement) {
+            return ((OracleSelectStatement) selectStatement).getModelSegment();
         }
         return Optional.empty();
     }

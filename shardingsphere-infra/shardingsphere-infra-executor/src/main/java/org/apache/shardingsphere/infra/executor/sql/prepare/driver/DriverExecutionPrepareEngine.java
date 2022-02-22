@@ -24,14 +24,16 @@ import org.apache.shardingsphere.infra.executor.sql.execute.engine.ConnectionMod
 import org.apache.shardingsphere.infra.executor.sql.execute.engine.driver.DriverExecutionUnit;
 import org.apache.shardingsphere.infra.executor.sql.prepare.AbstractExecutionPrepareEngine;
 import org.apache.shardingsphere.infra.rule.ShardingSphereRule;
-import org.apache.shardingsphere.infra.spi.ShardingSphereServiceLoader;
-import org.apache.shardingsphere.infra.spi.typed.TypedSPIRegistry;
+import org.apache.shardingsphere.spi.ShardingSphereServiceLoader;
+import org.apache.shardingsphere.spi.typed.TypedSPIRegistry;
 
 import java.sql.SQLException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Driver execution prepare engine.
@@ -40,6 +42,9 @@ import java.util.Properties;
  * @param <C> type of resource connection
  */
 public final class DriverExecutionPrepareEngine<T extends DriverExecutionUnit<?>, C> extends AbstractExecutionPrepareEngine<T> {
+    
+    @SuppressWarnings("rawtypes")
+    private static final Map<String, SQLExecutionUnitBuilder> TYPE_TO_BUILDER_MAP = new ConcurrentHashMap<>(8, 1);
     
     private final ExecutorDriverManager<C, ?, ?> executorDriverManager;
     
@@ -57,7 +62,22 @@ public final class DriverExecutionPrepareEngine<T extends DriverExecutionUnit<?>
         super(maxConnectionsSizePerQuery, rules);
         this.executorDriverManager = executorDriverManager;
         this.option = option;
-        sqlExecutionUnitBuilder = TypedSPIRegistry.getRegisteredService(SQLExecutionUnitBuilder.class, type, new Properties());
+        sqlExecutionUnitBuilder = getCachedSqlExecutionUnitBuilder(type);
+    }
+    
+    /**
+     * Refer to https://bugs.openjdk.java.net/browse/JDK-8161372.
+     * 
+     * @param type type
+     * @return sql execution unit builder
+     */
+    @SuppressWarnings("rawtypes")
+    private SQLExecutionUnitBuilder getCachedSqlExecutionUnitBuilder(final String type) {
+        SQLExecutionUnitBuilder result;
+        if (null == (result = TYPE_TO_BUILDER_MAP.get(type))) {
+            result = TYPE_TO_BUILDER_MAP.computeIfAbsent(type, key -> TypedSPIRegistry.getRegisteredService(SQLExecutionUnitBuilder.class, key, new Properties()));
+        }
+        return result;
     }
     
     @Override

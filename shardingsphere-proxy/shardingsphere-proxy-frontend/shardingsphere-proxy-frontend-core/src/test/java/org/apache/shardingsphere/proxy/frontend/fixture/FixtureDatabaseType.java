@@ -19,9 +19,11 @@ package org.apache.shardingsphere.proxy.frontend.fixture;
 
 import org.apache.shardingsphere.infra.database.metadata.DataSourceMetaData;
 import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.sql.parser.sql.common.constant.QuoteCharacter;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.mockito.Mockito.mock;
 
@@ -33,6 +35,11 @@ public final class FixtureDatabaseType implements DatabaseType {
     }
     
     @Override
+    public QuoteCharacter getQuoteCharacter() {
+        return QuoteCharacter.NONE;
+    }
+    
+    @Override
     public Collection<String> getJdbcUrlPrefixes() {
         return Collections.singleton("jdbc:fixture");
     }
@@ -40,5 +47,10 @@ public final class FixtureDatabaseType implements DatabaseType {
     @Override
     public DataSourceMetaData getDataSourceMetaData(final String url, final String username) {
         return mock(DataSourceMetaData.class);
+    }
+    
+    @Override
+    public Optional<String> getDataSourceClassName() {
+        return Optional.empty();
     }
 }

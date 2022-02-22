@@ -17,90 +17,95 @@
 
 grammar DCLStatement;
 
-import Symbol, Keyword, MySQLKeyword, Literals, BaseRule;
+import BaseRule;
 
 grant
-    : GRANT (proxyClause | privilegeClause | roleClause)
+    : GRANT roleOrPrivileges TO userList withGrantOption? # grantRoleOrPrivilegeTo
+    | GRANT roleOrPrivileges ON aclType? grantIdentifier TO userList withGrantOption? grantAs? # grantRoleOrPrivilegeOnTo
+    | GRANT ALL PRIVILEGES? ON aclType? grantIdentifier TO userList withGrantOption? grantAs? # grantRoleOrPrivilegeOnTo
+    | GRANT PROXY ON username TO userList withGrantOption? # grantProxy
     ;
 
 revoke
-    : REVOKE (proxyClause | privilegeClause | allClause | roleClause)
+    : REVOKE roleOrPrivileges FROM userList # revokeFrom
+    | REVOKE roleOrPrivileges ON aclType? grantIdentifier FROM userList # revokeOnFrom
+    | REVOKE ALL PRIVILEGES? ON aclType? grantIdentifier FROM userList # revokeOnFrom
+    | REVOKE ALL PRIVILEGES? COMMA_ GRANT OPTION FROM userList # revokeFrom
+    | REVOKE PROXY ON username FROM userList # revokeOnFrom
     ;
 
-proxyClause
-    : PROXY ON userOrRole TO userOrRoles withGrantOption?
+userList
+    : username (COMMA_ username)*
     ;
 
-privilegeClause
-    : privileges ON onObjectClause (TO | FROM) userOrRoles withGrantOption? grantOption?
+roleOrPrivileges
+    : roleOrPrivilege (COMMA_ roleOrPrivilege)*
     ;
 
-roleClause
-    : roles ( TO| FROM) userOrRoles withGrantOption?
+roleOrPrivilege
+    : roleIdentifierOrText (LP_ columnNames RP_)? # roleOrDynamicPrivilege
+    | roleIdentifierOrText AT_ textOrIdentifier  # roleAtHost
+    | SELECT (LP_ columnNames RP_)?  # staticPrivilegeSelect
+    | INSERT (LP_ columnNames RP_)?  # staticPrivilegeInsert
+    | UPDATE (LP_ columnNames RP_)?  # staticPrivilegeUpdate
+    | REFERENCES (LP_ columnNames RP_)?  # staticPrivilegeReferences
+    | DELETE  # staticPrivilegeDelete
+    | USAGE  # staticPrivilegeUsage
+    | INDEX  # staticPrivilegeIndex
+    | ALTER  # staticPrivilegeAlter
+    | CREATE  # staticPrivilegeCreate
+    | DROP  # staticPrivilegeDrop
+    | EXECUTE  # staticPrivilegeExecute
+    | RELOAD  # staticPrivilegeReload
+    | SHUTDOWN  # staticPrivilegeShutdown
+    | PROCESS  # staticPrivilegeProcess
+    | FILE  # staticPrivilegeFile
+    | GRANT OPTION  # staticPrivilegeGrant
+    | SHOW DATABASES  # staticPrivilegeShowDatabases
+    | SUPER  # staticPrivilegeSuper
+    | CREATE TEMPORARY TABLES  # staticPrivilegeCreateTemporaryTables
+    | LOCK TABLES  # staticPrivilegeLockTables
+    | REPLICATION SLAVE  # staticPrivilegeReplicationSlave
+    | REPLICATION CLIENT  # staticPrivilegeReplicationClient
+    | CREATE VIEW  # staticPrivilegeCreateView
+    | SHOW VIEW  # staticPrivilegeShowView
+    | CREATE ROUTINE  # staticPrivilegeCreateRoutine
+    | ALTER ROUTINE  # staticPrivilegeAlterRoutine
+    | CREATE USER  # staticPrivilegeCreateUser
+    | EVENT  # staticPrivilegeEvent
+    | TRIGGER  # staticPrivilegeTrigger
+    | CREATE TABLESPACE  # staticPrivilegeCreateTablespace
+    | CREATE ROLE  # staticPrivilegeCreateRole
+    | DROP ROLE  # staticPrivilegeDropRole
     ;
 
-allClause
-    : ALL PRIVILEGES? COMMA_ GRANT OPTION FROM userOrRoles
-    ;
-
-privileges
-    : privilege (COMMA_ privilege)*
-    ;
-
-privilege
-    : privilegeType (LP_ columnNames RP_)?
-    ;
-
-privilegeType
-    : ALL PRIVILEGES?
-    | ALTER ROUTINE?
-    | CREATE
-    | CREATE ROUTINE
-    | CREATE TABLESPACE
-    | CREATE TEMPORARY TABLES
-    | CREATE USER
-    | CREATE VIEW
-    | DELETE
-    | DROP
-    | DROP ROLE
-    | EVENT
-    | EXECUTE
-    | FILE
-    | GRANT OPTION
-    | INDEX
-    | INSERT
-    | LOCK TABLES
-    | PROCESS
-    | PROXY
-    | REFERENCES
-    | RELOAD
-    | REPLICATION CLIENT
-    | REPLICATION SLAVE
-    | SELECT
-    | SHOW DATABASES
-    | SHOW VIEW
-    | SHUTDOWN
-    | SUPER
-    | TRIGGER
-    | UPDATE
-    | USAGE
-    | identifier
-    ;
-
-onObjectClause
-    : objectType? privilegeLevel
-    ;
-
-objectType
+aclType
     : TABLE | FUNCTION | PROCEDURE
     ;
 
-privilegeLevel
-    : ASTERISK_ | ASTERISK_ DOT_ASTERISK_ | identifier DOT_ASTERISK_ | tableName  | schemaName DOT_ routineName
+grantIdentifier
+    : ASTERISK_ # grantLevelGlobal
+    | ASTERISK_ DOT_ASTERISK_ # grantLevelGlobal
+    | schemaName DOT_ASTERISK_ # grantLevelSchemaGlobal
+    | tableName # grantLevelTable
     ;
 
 createUser
-    : CREATE USER (IF NOT EXISTS)? alterUserList defaultRoleClause? requireClause? connectOptions? accountLockPasswordExpireOptions?
+    : CREATE USER (IF NOT EXISTS)? createUserList defaultRoleClause? requireClause? connectOptions? accountLockPasswordExpireOptions?
+    ;
+
+createUserEntry
+    : username # createUserEntryNoOption
+    | username IDENTIFIED BY string_ # createUserEntryIdentifiedBy
+    | username IDENTIFIED BY RANDOM PASSWORD # createUserEntryIdentifiedBy
+    | username IDENTIFIED WITH textOrIdentifier # createUserEntryIdentifiedWith
+    | username IDENTIFIED WITH textOrIdentifier AS string_ # createUserEntryIdentifiedWith
+    | username IDENTIFIED WITH textOrIdentifier BY string_ # createUserEntryIdentifiedWith
+    | username IDENTIFIED WITH textOrIdentifier BY RANDOM PASSWORD # createUserEntryIdentifiedWith
+    ;
+
+createUserList
+    : createUserEntry (COMMA_ createUserEntry)*
     ;
 
 defaultRoleClause
@@ -108,7 +113,7 @@ defaultRoleClause
     ;
 
 requireClause
-    : REQUIRE (NONE | tlsOption (AND? tlsOption)*)
+    : REQUIRE (NONE | SSL | X509 | tlsOption (AND? tlsOption)*)
     ;
 
 connectOptions
@@ -130,13 +135,13 @@ accountLockPasswordExpireOption
     ;
 
 alterUser
-    : ALTER USER (IF EXISTS)? alterUserList requireClause? connectOptions? accountLockPasswordExpireOptions?
-    | ALTER USER (IF EXISTS)? USER LP_ RP_ userFuncAuthOption
-    | ALTER USER (IF EXISTS)? userName DEFAULT ROLE (NONE | ALL | roleName (COMMA_ roleName)*)
+    : ALTER USER existClause? alterUserList requireClause? connectOptions? accountLockPasswordExpireOptions?
+    | ALTER USER existClause? USER LP_ RP_ userFuncAuthOption
+    | ALTER USER existClause? username DEFAULT ROLE (NONE | ALL | roleName (COMMA_ roleName)*)
     ;
 
 alterUserEntry
-    : userName userAuthOption?
+    : username userAuthOption?
     ;
 
 alterUserList
@@ -144,23 +149,23 @@ alterUserList
     ;
 
 dropUser
-    : DROP USER (IF EXISTS)? userName (COMMA_ userName)*
+    : DROP USER existClause? username (COMMA_ username)*
     ;
 
 createRole
-    : CREATE ROLE (IF NOT EXISTS)? roleName (COMMA_ roleName)*
+    : CREATE ROLE notExistClause? roleName (COMMA_ roleName)*
     ;
 
 dropRole
-    : DROP ROLE (IF EXISTS)? roleName (COMMA_ roleName)*
+    : DROP ROLE existClause? roleName (COMMA_ roleName)*
     ;
 
 renameUser
-    : RENAME USER userName TO userName (COMMA_ userName TO userName)*
+    : RENAME USER username TO username (COMMA_ username TO username)*
     ;
 
 setDefaultRole
-    : SET DEFAULT ROLE (NONE | ALL | roleName (COMMA_ roleName)*) TO userName (COMMA_ userName)*
+    : SET DEFAULT ROLE (NONE | ALL | roleName (COMMA_ roleName)*) TO username (COMMA_ username)*
     ;
 
 setRole
@@ -168,7 +173,7 @@ setRole
     ;
 
 setPassword
-    : SET PASSWORD (FOR userName)? authOption (REPLACE string_)? (RETAIN CURRENT PASSWORD)?
+    : SET PASSWORD (FOR username)? authOption (REPLACE string_)? (RETAIN CURRENT PASSWORD)?
     ;
 
 authOption
@@ -187,8 +192,12 @@ roles
     : roleName (COMMA_ roleName)*
     ;
 
-grantOption
-    : AS userName (WITH ROLE DEFAULT | NONE | ALL | ALL EXCEPT roles | roles )?
+grantAs
+    : AS username withRoles?
+    ;
+
+withRoles
+    : WITH ROLE (DEFAULT | NONE | ALL | ALL EXCEPT roles | roles)
     ;
 
 userAuthOption
@@ -215,7 +224,7 @@ connectOption
     ;
 
 tlsOption
-    : SSL | X509 | CIPHER string_ | ISSUER string_ | SUBJECT string_
+    : CIPHER string_ | ISSUER string_ | SUBJECT string_
     ;
 
 userFuncAuthOption

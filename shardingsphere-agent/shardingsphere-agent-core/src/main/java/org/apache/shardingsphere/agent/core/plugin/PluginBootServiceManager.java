@@ -17,6 +17,8 @@
 
 package org.apache.shardingsphere.agent.core.plugin;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.shardingsphere.agent.config.AgentConfiguration;
 import org.apache.shardingsphere.agent.config.PluginConfiguration;
@@ -25,11 +27,13 @@ import org.apache.shardingsphere.agent.core.spi.AgentTypedSPIRegistry;
 import org.apache.shardingsphere.agent.spi.boot.PluginBootService;
 
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 /**
  * Plugin boot service manager.
  */
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Slf4j
 public final class PluginBootServiceManager {
     
@@ -40,17 +44,18 @@ public final class PluginBootServiceManager {
      */
     public static void startAllServices(final Map<String, PluginConfiguration> pluginConfigurationMap) {
         Set<String> ignoredPluginNames = AgentConfigurationRegistry.INSTANCE.get(AgentConfiguration.class).getIgnoredPluginNames();
-        for (Map.Entry<String, PluginConfiguration> entry: pluginConfigurationMap.entrySet()) {
+        for (Entry<String, PluginConfiguration> entry: pluginConfigurationMap.entrySet()) {
+            if (!ignoredPluginNames.isEmpty() && ignoredPluginNames.contains(entry.getKey())) {
+                continue;
+            }
             AgentTypedSPIRegistry.getRegisteredServiceOptional(PluginBootService.class, entry.getKey()).ifPresent(pluginBootService -> {
                 try {
-                    if (!ignoredPluginNames.isEmpty() && ignoredPluginNames.contains(pluginBootService.getType())) {
-                        return;
-                    }
+                    log.info("Start plugin: {}", pluginBootService.getType());
                     pluginBootService.start(entry.getValue());
                     // CHECKSTYLE:OFF
                 } catch (final Throwable ex) {
                     // CHECKSTYLE:ON
-                    log.error("Failed to start service.", ex);
+                    log.error("Failed to start service", ex);
                 }
             });
         }
@@ -66,7 +71,7 @@ public final class PluginBootServiceManager {
                 // CHECKSTYLE:OFF
             } catch (final Throwable ex) {
                 // CHECKSTYLE:ON
-                log.error("Failed to close service.", ex);
+                log.error("Failed to close service", ex);
             }
         });
     }

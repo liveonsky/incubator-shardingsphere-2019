@@ -38,7 +38,7 @@ public final class OrderByContextEngine {
     
     /**
      * Create order by context.
-     * 
+     *
      * @param selectStatement select statement
      * @param groupByContext group by context
      * @return order by context
@@ -58,7 +58,7 @@ public final class OrderByContextEngine {
         }
         return new OrderByContext(orderByItems, false);
     }
-
+    
     private OrderByContext createOrderByContextForDistinctRowWithoutGroupBy(final SelectStatement selectStatement, final GroupByContext groupByContext) {
         if (groupByContext.getItems().isEmpty() && selectStatement.getProjections().isDistinctRow()) {
             int index = 0;

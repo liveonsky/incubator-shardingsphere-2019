@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.shardingsphere</groupId>
         <artifactId>shardingsphere</artifactId>
-        <version>5.0.0-RC1-SNAPSHOT</version>
+        <version>5.1.1-SNAPSHOT</version>
     </parent>
     <artifactId>shardingsphere-sql-parser</artifactId>
     <packaging>pom</packaging>
@@ -34,7 +34,5 @@
         <module>shardingsphere-sql-parser-statement</module>
         <module>shardingsphere-sql-parser-engine</module>
         <module>shardingsphere-sql-parser-dialect</module>
-        
-        <module>shardingsphere-sql-parser-test</module>
     </modules>
 </project>

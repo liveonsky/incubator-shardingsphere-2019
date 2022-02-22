@@ -21,7 +21,7 @@
     <parent>
         <groupId>org.apache.shardingsphere</groupId>
         <artifactId>shardingsphere</artifactId>
-        <version>5.0.0-RC1-SNAPSHOT</version>
+        <version>5.1.1-SNAPSHOT</version>
     </parent>
     <artifactId>shardingsphere-jdbc</artifactId>
     <packaging>pom</packaging>
@@ -29,7 +29,6 @@
     
     <modules>
         <module>shardingsphere-jdbc-core</module>
-        <module>shardingsphere-jdbc-governance</module>
         <module>shardingsphere-jdbc-spring</module>
     </modules>
 </project>

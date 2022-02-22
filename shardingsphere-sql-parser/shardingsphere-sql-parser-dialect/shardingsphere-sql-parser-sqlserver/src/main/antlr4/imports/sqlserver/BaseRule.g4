@@ -71,7 +71,7 @@ unreservedWord
     | ARRAY | LOCALTIME | LOCALTIMESTAMP | QUARTER | WEEK | MICROSECOND | ENABLE
     | DISABLE | BINARY | HIDDEN_ | MOD | PARTITION | TOP | ROW
     | XOR | ALWAYS | ROLE | START | ALGORITHM | AUTO | BLOCKERS
-    | CLUSTERED | COLUMNSTORE | CONTENT | DATABASE | DAYS | DENY | DETERMINISTIC
+    | CLUSTERED | COLUMNSTORE | CONTENT | CONCAT | DATABASE | DAYS | DENY | DETERMINISTIC
     | DISTRIBUTION | DOCUMENT | DURABILITY | ENCRYPTED | FILESTREAM | FILETABLE | FOLLOWING
     | HASH | HEAP | INBOUND | INFINITE | LOGIN | MASKED | MAXDOP 
     | MINUTES | MONTHS | MOVE | NOCHECK | NONCLUSTERED | OBJECT | OFF
@@ -96,15 +96,65 @@ unreservedWord
     | RULE | SYNONYM | COLLECTION | SCRIPT | KILL | BACKUP | LOG | SHOWPLAN
     | SUBSCRIBE | QUERY | NOTIFICATIONS | CHECKPOINT | SEQUENCE | INSTANCE | DO | DEFINER | LOCAL | CASCADED
     | NEXT | NAME | INTEGER | TYPE | MAX | MIN | SUM | COUNT | AVG | FIRST | DATETIME2
-    | OUTPUT | INSERTED | DELETED
+    | OUTPUT | INSERTED | DELETED | KB | MB | GB | TB | FILENAME | MAXSIZE | FILEGROWTH | UNLIMITED | MEMORY_OPTIMIZED_DATA | FILEGROUP | NON_TRANSACTED_ACCESS
+    | DB_CHAINING | TRUSTWORTHY | GROUP | ROWS | DATE | DATEPART | CAST | DAY
+    | FORWARD_ONLY | KEYSET | FAST_FORWARD | READ_ONLY | SCROLL_LOCKS | OPTIMISTIC | TYPE_WARNING | SCHEMABINDING | CALLER
+    | OWNER | SNAPSHOT | REPEATABLE | SERIALIZABLE | NATIVE_COMPILATION | VIEW_METADATA | INSTEAD | APPEND | INCREMENT | CACHE | MINVALUE | MAXVALUE | RESTART
+    | LOB_COMPACTION | COMPRESS_ALL_ROW_GROUPS | REORGANIZE | RESUME | PAUSE | ABORT
+    | ACCELERATED_DATABASE_RECOVERY | PERSISTENT_VERSION_STORE_FILEGROUP | IMMEDIATE | NO_WAIT | TARGET_RECOVERY_TIME | SECONDS | HONOR_BROKER_PRIORITY
+    | ERROR_BROKER_CONVERSATIONS | NEW_BROKER | DISABLE_BROKER | ENABLE_BROKER | MEMORY_OPTIMIZED_ELEVATE_TO_SNAPSHOT | READ_COMMITTED_SNAPSHOT | ALLOW_SNAPSHOT_ISOLATION
+    | RECURSIVE_TRIGGERS | QUOTED_IDENTIFIER | NUMERIC_ROUNDABORT | CONCAT_NULL_YIELDS_NULL | COMPATIBILITY_LEVEL | ARITHABORT | ANSI_WARNINGS | ANSI_PADDING | ANSI_NULLS
+    | ANSI_NULL_DEFAULT | PAGE_VERIFY | CHECKSUM | TORN_PAGE_DETECTION | BULK_LOGGED | RECOVERY | TOTAL_EXECUTION_CPU_TIME_MS | TOTAL_COMPILE_CPU_TIME_MS | STALE_CAPTURE_POLICY_THRESHOLD
+    | EXECUTION_COUNT | QUERY_CAPTURE_POLICY | WAIT_STATS_CAPTURE_MODE | MAX_PLANS_PER_QUERY | QUERY_CAPTURE_MODE | SIZE_BASED_CLEANUP_MODE | INTERVAL_LENGTH_MINUTES | MAX_STORAGE_SIZE_MB
+    | DATA_FLUSH_INTERVAL_SECONDS | CLEANUP_POLICY | CUSTOM | STALE_QUERY_THRESHOLD_DAYS | OPERATION_MODE | QUERY_STORE | CURSOR_DEFAULT | GLOBAL | CURSOR_CLOSE_ON_COMMIT | HOURS | CHANGE_RETENTION
+    | AUTO_CLEANUP | CHANGE_TRACKING | AUTOMATIC_TUNING | FORCE_LAST_GOOD_PLAN | AUTO_UPDATE_STATISTICS_ASYNC | AUTO_UPDATE_STATISTICS | AUTO_SHRINK | AUTO_CREATE_STATISTICS | INCREMENTAL | AUTO_CLOSE
+    | DATA_RETENTION | TEMPORAL_HISTORY_RETENTION | EDITION | MIXED_PAGE_ALLOCATION | DISABLED | ALLOWED | HADR | MULTI_USER | RESTRICTED_USER | SINGLE_USER | OFFLINE | EMERGENCY | SUSPEND | DATE_CORRELATION_OPTIMIZATION
+    | ELASTIC_POOL | SERVICE_OBJECTIVE | DATABASE_NAME | ALLOW_CONNECTIONS | GEO | NAMED | DATEFIRST | BACKUP_STORAGE_REDUNDANCY | FORCE_FAILOVER_ALLOW_DATA_LOSS | SECONDARY | FAILOVER | DEFAULT_FULLTEXT_LANGUAGE
+    | DEFAULT_LANGUAGE | INLINE | NESTED_TRIGGERS | TRANSFORM_NOISE_WORDS | TWO_DIGIT_YEAR_CUTOFF | PERSISTENT_LOG_BUFFER | DIRECTORY_NAME | DATEFORMAT | DELAYED_DURABILITY | TRANSFER | SCHEMA | PASSWORD
+    ;
+
+databaseName
+    : identifier
     ;
 
 schemaName
     : identifier
     ;
 
+functionName
+    : (owner DOT_)? name
+    ;
+
+procedureName
+    : (owner DOT_)? name (SEMI_ numberLiterals)?
+    ;
+
+viewName
+    : (owner DOT_)? name
+    ;
+
+triggerName
+    : (schemaName DOT_)? name
+    ;
+
+sequenceName
+    : (schemaName DOT_)? name
+    ;
+
 tableName
     : (owner DOT_)? name
+    ;
+
+queueName
+    : (schemaName DOT_)? name
+    ;
+
+contractName
+    : name
+    ;
+
+serviceName
+    : name
     ;
 
 columnName
@@ -135,6 +185,10 @@ indexName
     : identifier
     ;
 
+constraintName
+    : identifier
+    ;
+
 collationName
     : STRING_ | IDENTIFIER_
     ;
@@ -153,14 +207,19 @@ primaryKey
 
 // TODO comb expr
 expr
-    : expr logicalOperator expr
+    : expr andOperator expr
+    | expr orOperator expr
     | notOperator expr
     | LP_ expr RP_
     | booleanPrimary
     ;
 
-logicalOperator
-    : OR | OR_ | AND | AND_
+andOperator
+    : AND | AND_
+    ;
+
+orOperator
+    : OR | OR_
     ;
 
 notOperator
@@ -206,6 +265,7 @@ simpleExpr
     | parameterMarker
     | literals
     | columnName
+    | variableName
     | simpleExpr OR_ simpleExpr
     | (PLUS_ | MINUS_ | TILDE_ | NOT_ | BINARY) simpleExpr
     | ROW? LP_ expr (COMMA_ expr)* RP_
@@ -248,11 +308,11 @@ regularFunction
     ;
 
 regularFunctionName
-    : identifier | IF | LOCALTIME | LOCALTIMESTAMP | INTERVAL
+    : (owner DOT_)? identifier | IF | LOCALTIME | LOCALTIMESTAMP | INTERVAL
     ;
 
 caseExpression
-    : CASE simpleExpr? caseWhen+ caseElse?
+    : CASE simpleExpr? caseWhen+ caseElse? END
     ;
 
 caseWhen
@@ -277,18 +337,18 @@ orderByClause
     ;
 
 orderByItem
-    : (columnName | numberLiterals | expr) (ASC | DESC)?
+    : (columnName | numberLiterals | expr) (COLLATE identifier)? (ASC | DESC)?
     ;
 
 dataType
-    : dataTypeName (dataTypeLength | LP_ MAX RP_ | LP_ (CONTENT | DOCUMENT)? ignoredIdentifier RP_)?
+    : (ignoredIdentifier DOT_)? dataTypeName (dataTypeLength | LP_ MAX RP_ | LP_ (CONTENT | DOCUMENT)? ignoredIdentifier RP_)?
     ;
 
 dataTypeName
     : BIGINT | NUMERIC | BIT | SMALLINT | DECIMAL | SMALLMONEY | INT | TINYINT | MONEY | FLOAT | REAL
     | DATE | DATETIMEOFFSET | SMALLDATETIME | DATETIME | DATETIME2 | TIME | CHAR | VARCHAR | TEXT | NCHAR | NVARCHAR
     | NTEXT | BINARY | VARBINARY | IMAGE | SQL_VARIANT | XML | UNIQUEIDENTIFIER | HIERARCHYID | GEOMETRY
-    | GEOGRAPHY | IDENTIFIER_
+    | GEOGRAPHY | IDENTIFIER_ | INTEGER
     ;
 
 atTimeZoneExpr
@@ -376,6 +436,7 @@ eqKey
     | ALLOW_PAGE_LOCKS
     | COMPRESSION_DELAY
     | SORT_IN_TEMPDB
+    | OPTIMIZE_FOR_SEQUENTIAL_KEY
     ;
 
 eqOnOff
@@ -416,4 +477,32 @@ ignoredIdentifiers
 
 matchNone
     : 'Default does not match anything'
+    ;
+
+variableName
+    : AT_ identifier
+    ;
+
+executeAsClause
+    : (EXEC | EXECUTE) AS (CALLER | SELF | OWNER | stringLiterals)
+    ;
+
+transactionName
+    : identifier
+    ;
+
+transactionVariableName
+    : variableName
+    ;
+
+savepointName
+    : identifier
+    ;
+
+savepointVariableName
+    : variableName
+    ;
+
+entityType
+    : OBJECT | TYPE
     ;

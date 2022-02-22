@@ -1,9 +1,8 @@
 +++
 title = "Would you like to become an Apache committer"
-weight = 9
+weight = 5
 chapter = true
 +++
-## Would you like to become an Apache committer
 
 ### What is the Apache Software Foundation？
 

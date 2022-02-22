@@ -33,6 +33,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
@@ -41,6 +42,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -59,9 +61,6 @@ public final class TableMetaDataLoaderTest {
     
     @Mock
     private ResultSet tableExistResultSet;
-    
-    @Mock
-    private ResultSet tableNotExistResultSet;
     
     @Mock
     private ResultSet columnResultSet;
@@ -85,7 +84,6 @@ public final class TableMetaDataLoaderTest {
         when(columnResultSet.getString("TABLE_NAME")).thenReturn(TEST_TABLE);
         when(columnResultSet.getString("COLUMN_NAME")).thenReturn("pk_col", "col");
         when(columnResultSet.getInt("DATA_TYPE")).thenReturn(Types.INTEGER, Types.VARCHAR);
-        when(columnResultSet.getString("TYPE_NAME")).thenReturn("INT", "VARCHAR");
         when(dataSource.getConnection().getMetaData().getPrimaryKeys(TEST_CATALOG, null, TEST_TABLE)).thenReturn(primaryResultSet);
         when(primaryResultSet.next()).thenReturn(true, false);
         when(primaryResultSet.getString("COLUMN_NAME")).thenReturn("pk_col");
@@ -101,29 +99,30 @@ public final class TableMetaDataLoaderTest {
     
     @Test
     public void assertLoadWithExistedTable() throws SQLException {
-        Optional<TableMetaData> actual = TableMetaDataLoader.load(dataSource, TEST_TABLE, mock(DatabaseType.class));
+        DatabaseType databaseType = mock(DatabaseType.class, RETURNS_DEEP_STUBS);
+        when(databaseType.formatTableNamePattern(TEST_TABLE)).thenReturn(TEST_TABLE);
+        Optional<TableMetaData> actual = TableMetaDataLoaderEngine.load(Collections.singletonList(new TableMetaDataLoaderMaterial(Collections.singletonList(TEST_TABLE), dataSource)), databaseType)
+                .stream().findFirst();
         assertTrue(actual.isPresent());
         Map<String, ColumnMetaData> columnMetaDataMap = actual.get().getColumns();
         assertThat(columnMetaDataMap.size(), is(2));
-        assertColumnMetaData(columnMetaDataMap.get("pk_col"), "pk_col", Types.INTEGER, "INT", true, true);
-        assertColumnMetaData(columnMetaDataMap.get("col"), "col", Types.VARCHAR, "VARCHAR", false, false);
+        assertColumnMetaData(columnMetaDataMap.get("pk_col"), "pk_col", Types.INTEGER, true, true);
+        assertColumnMetaData(columnMetaDataMap.get("col"), "col", Types.VARCHAR, false, false);
         Map<String, IndexMetaData> indexMetaDataMap = actual.get().getIndexes();
         assertThat(indexMetaDataMap.size(), is(1));
         assertTrue(indexMetaDataMap.containsKey("my_index"));
     }
     
-    private void assertColumnMetaData(final ColumnMetaData actual, final String name, final int dataType, final String typeName, final boolean primaryKey, final boolean caseSensitive) {
+    private void assertColumnMetaData(final ColumnMetaData actual, final String name, final int dataType, final boolean primaryKey, final boolean caseSensitive) {
         assertThat(actual.getName(), is(name));
         assertThat(actual.getDataType(), is(dataType));
-        assertThat(actual.getDataTypeName(), is(typeName));
         assertThat(actual.isPrimaryKey(), is(primaryKey));
         assertThat(actual.isCaseSensitive(), is(caseSensitive));
     }
     
     @Test
     public void assertLoadWithNotExistedTable() throws SQLException {
-        when(dataSource.getConnection().getMetaData().getTables(TEST_CATALOG, null, TEST_TABLE, null)).thenReturn(tableNotExistResultSet);
-        when(tableNotExistResultSet.next()).thenReturn(false);
-        assertFalse(TableMetaDataLoader.load(dataSource, TEST_TABLE, mock(DatabaseType.class)).isPresent());
+        assertFalse(TableMetaDataLoaderEngine.load(Collections.singletonList(new TableMetaDataLoaderMaterial(Collections.singletonList(TEST_TABLE), dataSource)), mock(DatabaseType.class))
+                .stream().findFirst().isPresent());
     }
 }

@@ -18,15 +18,19 @@
 package org.apache.shardingsphere.proxy.backend.text.admin.mysql.executor;
 
 import lombok.Getter;
-import org.apache.shardingsphere.infra.auth.ShardingSphereUser;
+import lombok.RequiredArgsConstructor;
+import org.apache.shardingsphere.infra.executor.check.SQLCheckEngine;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.QueryResultMetaData;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.impl.raw.metadata.RawQueryResultColumnMetaData;
 import org.apache.shardingsphere.infra.executor.sql.execute.result.query.impl.raw.metadata.RawQueryResultMetaData;
 import org.apache.shardingsphere.infra.merge.result.MergedResult;
-import org.apache.shardingsphere.proxy.backend.communication.jdbc.connection.BackendConnection;
+import org.apache.shardingsphere.infra.rule.ShardingSphereRule;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
+import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 import org.apache.shardingsphere.proxy.backend.text.admin.executor.DatabaseAdminQueryExecutor;
 import org.apache.shardingsphere.sharding.merge.dal.common.SingleLocalDataMergedResult;
+import org.apache.shardingsphere.sql.parser.sql.common.util.SQLUtil;
+import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.dal.MySQLShowDatabasesStatement;
 
 import java.sql.Types;
 import java.util.Collection;
@@ -37,29 +41,46 @@ import java.util.Optional;
 /**
  * Show databases executor.
  */
+@RequiredArgsConstructor
 @Getter
 public final class ShowDatabasesExecutor implements DatabaseAdminQueryExecutor {
+    
+    private final MySQLShowDatabasesStatement showDatabasesStatement;
     
     private MergedResult mergedResult;
     
     @Override
-    public void execute(final BackendConnection backendConnection) {
-        mergedResult = new SingleLocalDataMergedResult(getSchemaNames(backendConnection));
+    public void execute(final ConnectionSession connectionSession) {
+        mergedResult = new SingleLocalDataMergedResult(getSchemaNames(connectionSession));
     }
     
-    private Collection<Object> getSchemaNames(final BackendConnection backendConnection) {
-        Collection<Object> result = new LinkedList<>(ProxyContext.getInstance().getAllSchemaNames());
-        Optional<ShardingSphereUser> user = ProxyContext.getInstance().getMetaDataContexts().getAuthentication().findUser(backendConnection.getUsername());
-        Collection<String> authorizedSchemas = user.isPresent() ? user.get().getAuthorizedSchemas() : Collections.emptyList();
-        if (!authorizedSchemas.isEmpty()) {
-            result.retainAll(authorizedSchemas);
+    private Collection<Object> getSchemaNames(final ConnectionSession connectionSession) {
+        Collection<Object> result = new LinkedList<>();
+        for (String each : ProxyContext.getInstance().getAllSchemaNames()) {
+            if (checkLikePattern(each) && SQLCheckEngine.check(each, getRules(each), connectionSession.getGrantee())) {
+                result.add(each);
+            }
         }
+        return result;
+    }
+    
+    private boolean checkLikePattern(final String schemaName) {
+        if (showDatabasesStatement.getFilter().isPresent()) {
+            Optional<String> pattern = showDatabasesStatement.getFilter().get().getLike().map(each -> SQLUtil.convertLikePatternToRegex(each.getPattern()));
+            return !pattern.isPresent() || schemaName.matches(pattern.get());
+        }
+        return true;
+    }
+    
+    private Collection<ShardingSphereRule> getRules(final String schemaName) {
+        Collection<ShardingSphereRule> result;
+        result = new LinkedList<>(ProxyContext.getInstance().getContextManager().getMetaDataContexts().getMetaData(schemaName).getRuleMetaData().getRules());
+        result.addAll(ProxyContext.getInstance().getContextManager().getMetaDataContexts().getGlobalRuleMetaData().getRules());
         return result;
     }
     
     @Override
     public QueryResultMetaData getQueryResultMetaData() {
-        return new RawQueryResultMetaData(
-                Collections.singletonList(new RawQueryResultColumnMetaData("SCHEMATA", "Database", "SCHEMA_NAME", Types.VARCHAR, "VARCHAR", 255, 0)));
+        return new RawQueryResultMetaData(Collections.singletonList(new RawQueryResultColumnMetaData("SCHEMATA", "Database", "schema_name", Types.VARCHAR, "VARCHAR", 255, 0)));
     }
 }

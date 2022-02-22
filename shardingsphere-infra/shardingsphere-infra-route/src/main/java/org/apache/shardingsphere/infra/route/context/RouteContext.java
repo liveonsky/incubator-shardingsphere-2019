@@ -47,7 +47,7 @@ public final class RouteContext {
     private final Map<Class<? extends ShardingSphereRule>, RouteStageContext> routeStageContexts = new LinkedHashMap<>();
     
     @Setter
-    private boolean toCalcite;
+    private boolean isFederated;
     
     /**
      * Judge is route for single database and table only or not.
@@ -83,7 +83,7 @@ public final class RouteContext {
     }
     
     private Set<String> getActualTableNames(final String actualDataSourceName, final String logicTableName) {
-        Set<String> result = new HashSet<>();
+        Set<String> result = new LinkedHashSet<>();
         for (RouteUnit each : routeUnits) {
             if (actualDataSourceName.equalsIgnoreCase(each.getDataSourceMapper().getActualName())) {
                 result.addAll(each.getActualTableNames(logicTableName));
@@ -96,7 +96,7 @@ public final class RouteContext {
      * Get map relationship between actual data source and logic tables.
      *
      * @param actualDataSourceNames actual data source names
-     * @return  map relationship between data source and logic tables
+     * @return map relationship between data source and logic tables
      */
     public Map<String, Set<String>> getDataSourceLogicTablesMap(final Collection<String> actualDataSourceNames) {
         Map<String, Set<String>> result = new HashMap<>(actualDataSourceNames.size(), 1);
@@ -134,5 +134,60 @@ public final class RouteContext {
             }
         }
         return Optional.empty();
+    }
+    
+    /**
+     * Put route unit.
+     *
+     * @param dataSourceMapper database mapper
+     * @param tableMappers table mapper collection
+     */
+    public void putRouteUnit(final RouteMapper dataSourceMapper, final Collection<RouteMapper> tableMappers) {
+        Collection<RouteUnit> targets = getTargetRouteUnits(dataSourceMapper);
+        if (targets.isEmpty()) {
+            RouteUnit unit = new RouteUnit(dataSourceMapper, new LinkedHashSet<>());
+            unit.getTableMappers().addAll(tableMappers);
+            routeUnits.add(unit);
+        } else {
+            Collection<RouteUnit> toBeAdded = new LinkedList<>();
+            Collection<RouteUnit> toBeRemoved = new LinkedList<>();
+            for (RouteUnit each : targets) {
+                RouteUnit unit = new RouteUnit(dataSourceMapper, new LinkedHashSet<>());
+                unit.getTableMappers().addAll(each.getTableMappers());
+                unit.getTableMappers().addAll(tableMappers);
+                toBeAdded.add(unit);
+                toBeRemoved.add(each);
+            }
+            boolean success = routeUnits.addAll(toBeAdded);
+            if (success) {
+                routeUnits.removeAll(toBeRemoved);
+            }
+        }
+    }
+    
+    private Collection<RouteUnit> getTargetRouteUnits(final RouteMapper dataSourceMapper) {
+        Collection<RouteUnit> result = new LinkedList<>();
+        for (RouteUnit each : routeUnits) {
+            if (each.getDataSourceMapper().equals(dataSourceMapper)) {
+                result.add(each);
+            }
+        }
+        return result;
+    }
+    
+    /**
+     * Judge whether route context contains table sharding or not.
+     * 
+     * @return whether route context contains table sharding or not
+     */
+    public boolean containsTableSharding() {
+        for (RouteUnit each : routeUnits) {
+            for (RouteMapper tableMapper : each.getTableMappers()) {
+                if (!tableMapper.getActualName().equals(tableMapper.getLogicName())) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }

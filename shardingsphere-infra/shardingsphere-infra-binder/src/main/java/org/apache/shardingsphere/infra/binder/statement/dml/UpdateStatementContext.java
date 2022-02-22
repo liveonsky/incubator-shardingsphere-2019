@@ -28,7 +28,7 @@ import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.table.Sim
 import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.UpdateStatement;
 
 import java.util.Collection;
-import java.util.Optional;
+import java.util.LinkedList;
 
 /**
  * Update SQL statement context.
@@ -38,22 +38,27 @@ public final class UpdateStatementContext extends CommonSQLStatementContext<Upda
     
     private final TablesContext tablesContext;
     
+    private final Collection<WhereSegment> whereSegments = new LinkedList<>();
+    
     public UpdateStatementContext(final UpdateStatement sqlStatement) {
         super(sqlStatement);
-        TableExtractor tableExtractor = new TableExtractor();
-        tableExtractor.extractTablesFromUpdate(sqlStatement);
-        tablesContext = new TablesContext(tableExtractor.getRewriteTables());
+        tablesContext = new TablesContext(getAllSimpleTableSegments());
+        getSqlStatement().getWhere().ifPresent(whereSegments::add);
     }
     
-    @Override
-    public Collection<SimpleTableSegment> getAllTables() {
+    private Collection<SimpleTableSegment> getAllSimpleTableSegments() {
         TableExtractor tableExtractor = new TableExtractor();
         tableExtractor.extractTablesFromUpdate(getSqlStatement());
         return tableExtractor.getRewriteTables();
     }
     
     @Override
-    public Optional<WhereSegment> getWhere() {
-        return getSqlStatement().getWhere();
+    public Collection<SimpleTableSegment> getAllTables() {
+        return tablesContext.getTables();
+    }
+    
+    @Override
+    public Collection<WhereSegment> getWhereSegments() {
+        return whereSegments;
     }
 }

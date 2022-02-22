@@ -1,23 +1,24 @@
 +++
-pre = "<b>5.1. </b>"
+pre = "<b>6.5. </b>"
 title = "SQL Parser"
-weight = 1
+weight = 5
 chapter = true
 +++
 
-## SQLParserFacade
+## DatabaseTypedSQLParserFacade
 
-| *SPI Name*             | *Description*                          |
-| ---------------------- | -------------------------------------- |
-| SQLParserFacade        | SQL parser facade for lexer and parser |
+| *SPI Name*                   | *Description*                          |
+| ---------------------------- | -------------------------------------- |
+| DatabaseTypedSQLParserFacade | SQL parser facade for lexer and parser |
 
-| *Implementation Class* | *Description*                          |
-| ---------------------- | -------------------------------------- |
-| MySQLParserFacade      | SQL parser facade for MySQL            |
-| PostgreSQLParserFacade | SQL parser facade for PostgreSQL       |
-| SQLServerParserFacade  | SQL parser facade for SQLServer        |
-| OracleParserFacade     | SQL parser facade for Oracle           |
-| SQL92ParserFacade      | SQL parser facade for SQL92            |
+| *Implementation Class* | *Description*                      |
+| ---------------------- |------------------------------------|
+| MySQLParserFacade      | SQL parser facade for MySQL        |
+| PostgreSQLParserFacade | SQL parser facade for PostgreSQL   |
+| SQLServerParserFacade  | SQL parser facade for SQLServer    |
+| OracleParserFacade     | SQL parser facade for Oracle       |
+| SQL92ParserFacade      | SQL parser facade for SQL92        |
+| OpenGaussParserFacade  | SQL parser facade for openGauss    |
 
 ## SQLVisitorFacade
 
@@ -32,13 +33,3 @@ chapter = true
 | SQLServerStatementSQLVisitorFacade  | SQL visitor of statement extracted facade for SQLServer  |
 | OracleStatementSQLVisitorFacade     | SQL visitor of statement extracted facade for Oracle     |
 | SQL92StatementSQLVisitorFacade      | SQL visitor of statement extracted facade for SQL92      |
-
-## ParsingHook
-
-| *SPI Name*             | *Description*                                     |
-| ---------------------- | ------------------------------------------------- |
-| ParsingHook            | Used to trace SQL parse process                   |
-
-| *Implementation Class* | *Description*                                     |
-| ---------------------- | ------------------------------------------------- |
-| OpenTracingParsingHook | Use OpenTrace protocol to trace SQL parse process |

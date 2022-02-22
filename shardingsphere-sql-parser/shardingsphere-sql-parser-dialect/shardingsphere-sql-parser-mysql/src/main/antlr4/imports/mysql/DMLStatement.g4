@@ -17,7 +17,7 @@
 
 grammar DMLStatement;
 
-import Symbol, Keyword, MySQLKeyword, Literals, BaseRule;
+import BaseRule;
 
 insert
     : INSERT insertSpecification INTO? tableName partitionNames? (insertValuesClause | setAssignmentsClause | insertSelectClause) onDuplicateKeyClause?
@@ -138,8 +138,12 @@ queryExpression
 
 queryExpressionBody
     : queryPrimary
-    | queryExpressionParens UNION unionOption? (queryPrimary | queryExpressionParens)
-    | queryExpressionBody UNION unionOption? (queryPrimary | queryExpressionParens)
+    | queryExpressionParens unionClause
+    | queryExpressionBody unionClause
+    ;
+
+unionClause
+    : UNION unionOption? (queryPrimary | queryExpressionParens)
     ;
 
 queryExpressionParens
@@ -149,7 +153,7 @@ queryExpressionParens
 queryPrimary
     : querySpecification
     | tableValueConstructor
-    | explicitTable
+    | tableStatement
     ;
 
 querySpecification
@@ -201,7 +205,7 @@ loadDataStatement
       (REPLACE | IGNORE)?
       INTO TABLE tableName partitionNames?
       (CHARACTER SET identifier)?
-      ((FIELDS | COLUMNS) selectFieldsInto+ )?
+      (COLUMNS selectFieldsInto+ )?
       ( LINES selectLinesInto+ )?
       ( IGNORE numberLiterals (LINES | ROWS) )?
       fieldOrVarSpec?
@@ -221,7 +225,7 @@ loadXmlStatement
       (setAssignmentsClause)?
     ;
 
-explicitTable
+tableStatement
     : TABLE tableName
     ;
 
@@ -242,7 +246,7 @@ cteClause
     ;
 
 selectSpecification
-    : duplicateSpecification | HIGH_PRIORITY | STRAIGHT_JOIN | SQL_SMALL_RESULT | SQL_BIG_RESULT | SQL_BUFFER_RESULT | (SQL_CACHE | SQL_NO_CACHE) | SQL_CALC_FOUND_ROWS
+    : duplicateSpecification | HIGH_PRIORITY | STRAIGHT_JOIN | SQL_SMALL_RESULT | SQL_BIG_RESULT | SQL_BUFFER_RESULT | SQL_NO_CACHE | SQL_CALC_FOUND_ROWS
     ;
 
 duplicateSpecification
@@ -262,7 +266,7 @@ unqualifiedShorthand
     ;
 
 qualifiedShorthand
-    : identifier DOT_ASTERISK_
+    : (identifier DOT_)? identifier DOT_ASTERISK_
     ;
 
 fromClause
@@ -350,7 +354,7 @@ windowClause
     ;
 
 windowItem
-    : identifier AS LP_ windowSpecification RP_
+    : identifier AS windowSpecification
     ;
 
 subquery
@@ -367,7 +371,7 @@ selectFieldsInto
 
 selectIntoExpression
     : INTO variable (COMMA_ variable )* | INTO DUMPFILE string_
-    | (INTO OUTFILE string_ (CHARACTER SET charsetName)?((FIELDS | COLUMNS) selectFieldsInto+)? (LINES selectLinesInto+)?)
+    | (INTO OUTFILE string_ (CHARACTER SET charsetName)?(COLUMNS selectFieldsInto+)? (LINES selectLinesInto+)?)
     ;
 
 lockClause

@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.infra.metadata.schema.builder;
 
-import org.apache.shardingsphere.infra.config.properties.ConfigurationProperties;
+import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.database.type.DatabaseType;
 import org.apache.shardingsphere.infra.metadata.schema.fixture.rule.CommonFixtureRule;
 import org.apache.shardingsphere.infra.metadata.schema.fixture.rule.DataNodeContainedFixtureRule;
@@ -48,14 +48,17 @@ public final class TableMetaDataBuilderTest {
     private ConfigurationProperties props;
     
     @Test
-    public void assertBuildWithExistedTableName() throws SQLException {
-        assertTrue(TableMetaDataBuilder.build("data_node_routed_table_0", new SchemaBuilderMaterials(
-                databaseType, Collections.singletonMap("logic_db", dataSource), Arrays.asList(new CommonFixtureRule(), new DataNodeContainedFixtureRule()), props)).isPresent());
+    public void assertLoadWithExistedTableName() throws SQLException {
+        assertFalse(TableMetaDataBuilder.load(Collections.singletonList("data_node_routed_table1"), new SchemaBuilderMaterials(
+                databaseType, Collections.singletonMap("logic_db", dataSource), Arrays.asList(new CommonFixtureRule(),
+                new DataNodeContainedFixtureRule()), props)).isEmpty());
     }
     
     @Test
-    public void assertBuildWithNotExistedTableName() throws SQLException {
-        assertFalse(TableMetaDataBuilder.build("invalid_table", new SchemaBuilderMaterials(
-                databaseType, Collections.singletonMap("logic_db", dataSource), Arrays.asList(new CommonFixtureRule(), new DataNodeContainedFixtureRule()), props)).isPresent());
+    public void assertLoadWithNotExistedTableName() throws SQLException {
+        assertTrue(TableMetaDataBuilder.load(Collections.singletonList("invalid_table"), new SchemaBuilderMaterials(
+                databaseType, Collections.singletonMap("logic_db", dataSource), Arrays.asList(new CommonFixtureRule(), new DataNodeContainedFixtureRule()),
+                props)).isEmpty());
     }
+    
 }

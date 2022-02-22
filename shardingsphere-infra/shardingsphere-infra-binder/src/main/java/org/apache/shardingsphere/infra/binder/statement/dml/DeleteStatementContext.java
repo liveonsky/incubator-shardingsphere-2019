@@ -28,7 +28,9 @@ import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.table.Sim
 import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.DeleteStatement;
 
 import java.util.Collection;
-import java.util.Optional;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
 
 /**
  * Delete statement context.
@@ -38,22 +40,42 @@ public final class DeleteStatementContext extends CommonSQLStatementContext<Dele
     
     private final TablesContext tablesContext;
     
+    private final Collection<WhereSegment> whereSegments = new LinkedList<>();
+    
     public DeleteStatementContext(final DeleteStatement sqlStatement) {
         super(sqlStatement);
+        tablesContext = new TablesContext(getAllSimpleTableSegments());
+        getSqlStatement().getWhere().ifPresent(whereSegments::add);
+    }
+    
+    private Collection<SimpleTableSegment> getAllSimpleTableSegments() {
         TableExtractor tableExtractor = new TableExtractor();
-        tableExtractor.extractTablesFromDelete(sqlStatement);
-        tablesContext = new TablesContext(tableExtractor.getRewriteTables());
+        tableExtractor.extractTablesFromDelete(getSqlStatement());
+        return filterAliasDeleteTable(tableExtractor.getRewriteTables());
+    }
+    
+    private Collection<SimpleTableSegment> filterAliasDeleteTable(final Collection<SimpleTableSegment> tableSegments) {
+        Map<String, SimpleTableSegment> aliasTableSegmentMap = new HashMap<>(tableSegments.size(), 1f);
+        for (SimpleTableSegment each : tableSegments) {
+            each.getAlias().ifPresent(alias -> aliasTableSegmentMap.putIfAbsent(alias, each));
+        }
+        Collection<SimpleTableSegment> result = new LinkedList<>();
+        for (SimpleTableSegment each : tableSegments) {
+            SimpleTableSegment aliasDeleteTable = aliasTableSegmentMap.get(each.getTableName().getIdentifier().getValue());
+            if (null == aliasDeleteTable || aliasDeleteTable.equals(each)) {
+                result.add(each);
+            }
+        }
+        return result;
     }
     
     @Override
     public Collection<SimpleTableSegment> getAllTables() {
-        TableExtractor tableExtractor = new TableExtractor();
-        tableExtractor.extractTablesFromDelete(getSqlStatement());
-        return tableExtractor.getRewriteTables();
+        return tablesContext.getTables();
     }
     
     @Override
-    public Optional<WhereSegment> getWhere() {
-        return getSqlStatement().getWhere();
+    public Collection<WhereSegment> getWhereSegments() {
+        return whereSegments;
     }
 }

@@ -79,7 +79,7 @@ public final class OrderByContextEngineTest {
         OrderByItem orderByItem1 = new OrderByItem(new IndexOrderByItemSegment(0, 1, 1, OrderDirection.ASC, OrderDirection.DESC));
         OrderByItem orderByItem2 = new OrderByItem(new IndexOrderByItemSegment(1, 2, 2, OrderDirection.ASC, OrderDirection.DESC));
         Collection<OrderByItem> orderByItems = Arrays.asList(orderByItem1, orderByItem2);
-        GroupByContext groupByContext = new GroupByContext(orderByItems, 0);
+        GroupByContext groupByContext = new GroupByContext(orderByItems);
         OrderByContext actualOrderByContext = new OrderByContextEngine().createOrderBy(selectStatement, groupByContext);
         assertThat(actualOrderByContext.getItems(), is(orderByItems));
         assertTrue(actualOrderByContext.isGenerated());
@@ -116,7 +116,7 @@ public final class OrderByContextEngineTest {
         OrderByItemSegment indexOrderByItemSegment2 = new IndexOrderByItemSegment(2, 3, 3, OrderDirection.ASC, OrderDirection.DESC);
         OrderBySegment orderBySegment = new OrderBySegment(0, 1, Arrays.asList(columnOrderByItemSegment, indexOrderByItemSegment1, indexOrderByItemSegment2));
         selectStatement.setOrderBy(orderBySegment);
-        GroupByContext emptyGroupByContext = new GroupByContext(Collections.emptyList(), 0);
+        GroupByContext emptyGroupByContext = new GroupByContext(Collections.emptyList());
         OrderByContext actualOrderByContext = new OrderByContextEngine().createOrderBy(selectStatement, emptyGroupByContext);
         OrderByItem expectedOrderByItem1 = new OrderByItem(columnOrderByItemSegment);
         OrderByItem expectedOrderByItem2 = new OrderByItem(indexOrderByItemSegment1);
@@ -160,7 +160,7 @@ public final class OrderByContextEngineTest {
         projectionsSegment.setDistinctRow(true);
         projectionsSegment.getProjections().addAll(list);
         selectStatement.setProjections(projectionsSegment);
-        GroupByContext groupByContext = new GroupByContext(Collections.emptyList(), 0);
+        GroupByContext groupByContext = new GroupByContext(Collections.emptyList());
         OrderByContext actualOrderByContext = new OrderByContextEngine().createOrderBy(selectStatement, groupByContext);
         assertThat(actualOrderByContext.getItems().size(), is(list.size()));
         List<OrderByItem> items = (List<OrderByItem>) actualOrderByContext.getItems();

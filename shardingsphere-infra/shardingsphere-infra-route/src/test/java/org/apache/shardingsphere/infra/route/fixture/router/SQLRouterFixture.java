@@ -17,7 +17,7 @@
 
 package org.apache.shardingsphere.infra.route.fixture.router;
 
-import org.apache.shardingsphere.infra.config.properties.ConfigurationProperties;
+import org.apache.shardingsphere.infra.config.props.ConfigurationProperties;
 import org.apache.shardingsphere.infra.route.SQLRouter;
 import org.apache.shardingsphere.infra.route.context.RouteContext;
 import org.apache.shardingsphere.infra.route.context.RouteMapper;
@@ -45,7 +45,7 @@ public final class SQLRouterFixture implements SQLRouter<RouteRuleFixture> {
     
     @Override
     public int getOrder() {
-        return 0;
+        return -10;
     }
     
     @Override

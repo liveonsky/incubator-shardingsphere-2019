@@ -21,6 +21,8 @@ import lombok.Setter;
 import lombok.ToString;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.pagination.limit.LimitSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.segment.dml.predicate.LockSegment;
+import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.WindowSegment;
+import org.apache.shardingsphere.sql.parser.sql.common.segment.generic.table.SimpleTableSegment;
 import org.apache.shardingsphere.sql.parser.sql.common.statement.dml.SelectStatement;
 import org.apache.shardingsphere.sql.parser.sql.dialect.statement.mysql.MySQLStatement;
 
@@ -33,9 +35,13 @@ import java.util.Optional;
 @ToString
 public final class MySQLSelectStatement extends SelectStatement implements MySQLStatement {
     
+    private SimpleTableSegment table;
+    
     private LimitSegment limit;
     
     private LockSegment lock;
+    
+    private WindowSegment window;
     
     /**
      * Get order by segment.
@@ -53,5 +59,23 @@ public final class MySQLSelectStatement extends SelectStatement implements MySQL
      */
     public Optional<LockSegment> getLock() {
         return Optional.ofNullable(lock);
+    }
+    
+    /**
+     * Get window segment.
+     *
+     * @return window segment
+     */
+    public Optional<WindowSegment> getWindow() {
+        return Optional.ofNullable(window);
+    }
+
+    /**
+     * Get simple table segment.
+     *
+     * @return simple table segment
+     */
+    public Optional<SimpleTableSegment> getTable() {
+        return Optional.ofNullable(table);
     }
 }

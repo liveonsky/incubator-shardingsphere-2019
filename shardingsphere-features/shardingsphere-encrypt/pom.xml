@@ -23,7 +23,7 @@
     <parent>
         <groupId>org.apache.shardingsphere</groupId>
         <artifactId>shardingsphere-features</artifactId>
-        <version>5.0.0-RC1-SNAPSHOT</version>
+        <version>5.1.1-SNAPSHOT</version>
     </parent>
     <artifactId>shardingsphere-encrypt</artifactId>
     <name>${project.artifactId}</name>
@@ -31,9 +31,8 @@
     
     <modules>
         <module>shardingsphere-encrypt-api</module>
-        <module>shardingsphere-encrypt-common</module>
-        <module>shardingsphere-encrypt-rewrite</module>
-        <module>shardingsphere-encrypt-merge</module>
+        <module>shardingsphere-encrypt-core</module>
+        <module>shardingsphere-encrypt-distsql</module>
         <module>shardingsphere-encrypt-spring</module>
     </modules>
 </project>

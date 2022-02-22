@@ -1,10 +1,8 @@
 +++
 title = "Apache ShardingSphere社区的探索与拓展"
-weight = 5
+weight = 9
 chapter = true
 +++
-
-## Apache ShardingSphere社区的探索与拓展 ##
 
 
 Apache ShardingSphere社区受邀参与了11月9日在清华大学举办的《Apache Event——走进Apache开源软件社区》的分享活动。在活动中Apache ShardingSphere社区的PPMC张亮分享了《Apache ShardingSphere社区的探索与拓展》这个话题，下面呈现分享的主要内容。

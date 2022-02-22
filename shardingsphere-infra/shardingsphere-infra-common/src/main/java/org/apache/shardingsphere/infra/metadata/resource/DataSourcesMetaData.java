@@ -18,17 +18,15 @@
 package org.apache.shardingsphere.infra.metadata.resource;
 
 import org.apache.shardingsphere.infra.database.metadata.DataSourceMetaData;
-import org.apache.shardingsphere.infra.database.metadata.MemorizedDataSourceMetaData;
 import org.apache.shardingsphere.infra.database.type.DatabaseType;
-import org.apache.shardingsphere.infra.config.DatabaseAccessConfiguration;
+import org.apache.shardingsphere.infra.datasource.props.DataSourcePropertiesCreator;
 
+import javax.sql.DataSource;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * Data sources meta data.
@@ -37,10 +35,12 @@ public final class DataSourcesMetaData {
     
     private final Map<String, DataSourceMetaData> dataSourceMetaDataMap;
     
-    public DataSourcesMetaData(final DatabaseType databaseType, final Map<String, DatabaseAccessConfiguration> databaseAccessConfigs) {
-        dataSourceMetaDataMap = databaseAccessConfigs.entrySet().stream().collect(
-                Collectors.toMap(Entry::getKey, entry -> databaseType.getDataSourceMetaData(entry.getValue().getUrl(),
-                        entry.getValue().getUsername()), (oldValue, currentValue) -> oldValue, LinkedHashMap::new));
+    public DataSourcesMetaData(final DatabaseType databaseType, final Map<String, DataSource> dataSourceMap) {
+        dataSourceMetaDataMap = new LinkedHashMap<>(dataSourceMap.size(), 1);
+        for (Entry<String, DataSource> entry : dataSourceMap.entrySet()) {
+            Map<String, Object> standardProps = DataSourcePropertiesCreator.create(entry.getValue()).getConnectionPropertySynonyms().getStandardProperties();
+            dataSourceMetaDataMap.put(entry.getKey(), databaseType.getDataSourceMetaData(standardProps.get("url").toString(), standardProps.get("username").toString()));
+        }
     }
     
     /**
@@ -59,12 +59,8 @@ public final class DataSourcesMetaData {
     }
     
     private boolean isExisted(final String dataSourceName, final Collection<String> existedDataSourceNames) {
-        return existedDataSourceNames.stream().anyMatch(each -> isInSameDatabaseInstance(dataSourceMetaDataMap.get(dataSourceName), dataSourceMetaDataMap.get(each)));
-    }
-    
-    private boolean isInSameDatabaseInstance(final DataSourceMetaData sample, final DataSourceMetaData target) {
-        return sample instanceof MemorizedDataSourceMetaData
-                ? Objects.equals(target.getSchema(), sample.getSchema()) : target.getHostName().equals(sample.getHostName()) && target.getPort() == sample.getPort();
+        DataSourceMetaData dataSourceMetaData = dataSourceMetaDataMap.get(dataSourceName);
+        return existedDataSourceNames.stream().anyMatch(each -> dataSourceMetaData.isInSameDatabaseInstance(dataSourceMetaDataMap.get(each)));
     }
     
     /**

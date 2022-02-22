@@ -43,6 +43,28 @@ execute
     | createRole
     | dropRole
     | alterRole
+    | setRole
     | call
+    | merge
+    | alterSynonym
+    | alterSession
+    | alterDatabase
+    | alterSystem
+    | setConstraints
+    | analyze
+    | associateStatistics
+    | disassociateStatistics
+    | audit
+    | noAudit
+    | comment
+    | flashbackDatabase
+    | flashbackTable
+    | purge
+    | rename
+    | createDatabase
+    | createDatabaseLink
+    | createDimension
+    | alterDimension
+    | dropDimension
     ) SEMI_?
     ;

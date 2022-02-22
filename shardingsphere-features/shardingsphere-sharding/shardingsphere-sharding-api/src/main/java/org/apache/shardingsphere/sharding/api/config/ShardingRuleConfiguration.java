@@ -19,8 +19,10 @@ package org.apache.shardingsphere.sharding.api.config;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.apache.shardingsphere.infra.config.RuleConfiguration;
 import org.apache.shardingsphere.infra.config.algorithm.ShardingSphereAlgorithmConfiguration;
+import org.apache.shardingsphere.infra.config.function.DistributedRuleConfiguration;
+import org.apache.shardingsphere.infra.config.rulealtered.OnRuleAlteredActionConfiguration;
+import org.apache.shardingsphere.infra.config.scope.SchemaRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingAutoTableRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.rule.ShardingTableRuleConfiguration;
 import org.apache.shardingsphere.sharding.api.config.strategy.keygen.KeyGenerateStrategyConfiguration;
@@ -36,7 +38,7 @@ import java.util.Map;
  */
 @Getter
 @Setter
-public final class ShardingRuleConfiguration implements RuleConfiguration {
+public final class ShardingRuleConfiguration implements SchemaRuleConfiguration, DistributedRuleConfiguration {
     
     private Collection<ShardingTableRuleConfiguration> tables = new LinkedList<>();
     
@@ -51,8 +53,14 @@ public final class ShardingRuleConfiguration implements RuleConfiguration {
     private ShardingStrategyConfiguration defaultTableShardingStrategy;
     
     private KeyGenerateStrategyConfiguration defaultKeyGenerateStrategy;
+
+    private String defaultShardingColumn;
     
     private Map<String, ShardingSphereAlgorithmConfiguration> shardingAlgorithms = new LinkedHashMap<>();
     
     private Map<String, ShardingSphereAlgorithmConfiguration> keyGenerators = new LinkedHashMap<>();
+    
+    private String scalingName;
+    
+    private Map<String, OnRuleAlteredActionConfiguration> scaling = new LinkedHashMap<>();
 }

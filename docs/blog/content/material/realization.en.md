@@ -1,10 +1,8 @@
 +++
 title = "The quick explanation of ShardingSphere transaction module"
-weight = 12
+weight = 2
 chapter = true
 +++
-
-## Distributed Transaction Implementation on Sharding-Sphere
 
 <!-- ## 分布式事务在Sharding-Sphere中的实现 -->
 ### Lecturer
@@ -400,9 +398,9 @@ All in word, TCC and MQ are both depend on business transformation, but XA, BED 
 <!-- ### Sharding-Sphere对分布式事务的支持 -->
 ### Distributed Transaction of Sharding-Sphere
 
-<!-- Sharding-Sphere是一套开源的分布式数据库中间件解决方案组成的生态圈，它由Sharding-JDBC、Sharding-Proxy和Sharding-Sidecar这3款相互独立的产品组成。它们均提供标准化的数据分片、读写分离、柔性事务和数据治理功能，可适用于如Java同构、异构语言、容器、云原生等各种多样化的应用场景。 -->
+<!-- Sharding-Sphere是一套开源的分布式数据库中间件解决方案组成的生态圈，它由Sharding-JDBC、Sharding-Proxy和Sharding-Sidecar这3款相互独立的产品组成。它们均提供标准化的数据水平扩展、分布式事务和分布式治理等功能，可适用于如Java同构、异构语言、容器、云原生等各种多样化的应用场景。 -->
 
-[ShardingSphere](https://github.com/sharding-sphere/sharding-sphere/) is an open-source ecosystem consisted of a set of distributed database middleware solutions, including 3 independent products, JDBC, Proxy & Sidecar. They all provide functions of data sharding, distributed transaction and database governance, applicable in a variety of situations such as Java isomorphism, heterogeneous language container and cloud native.
+[ShardingSphere](https://github.com/sharding-sphere/sharding-sphere/) is an open-source ecosystem consisting of a set of distributed database middleware solutions, including 3 independent products, JDBC, Proxy & Sidecar. They all provide functions of data scale out, distributed transaction and distributed governance, applicable in a variety of situations such as Java isomorphism, heterogeneous language container and cloud native.
 
 <!-- 项目地址： -->
 

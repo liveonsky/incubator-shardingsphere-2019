@@ -17,19 +17,22 @@
 
 package org.apache.shardingsphere.proxy.backend.text.data.impl;
 
+import io.vertx.core.Future;
 import lombok.RequiredArgsConstructor;
+import org.apache.shardingsphere.infra.binder.statement.SQLStatementContext;
 import org.apache.shardingsphere.proxy.backend.communication.DatabaseCommunicationEngine;
 import org.apache.shardingsphere.proxy.backend.communication.DatabaseCommunicationEngineFactory;
-import org.apache.shardingsphere.proxy.backend.communication.jdbc.connection.BackendConnection;
+import org.apache.shardingsphere.proxy.backend.communication.jdbc.JDBCDatabaseCommunicationEngine;
 import org.apache.shardingsphere.proxy.backend.context.ProxyContext;
 import org.apache.shardingsphere.proxy.backend.exception.NoDatabaseSelectedException;
-import org.apache.shardingsphere.proxy.backend.exception.RuleNotExistsException;
+import org.apache.shardingsphere.proxy.backend.exception.RuleNotExistedException;
 import org.apache.shardingsphere.proxy.backend.response.header.ResponseHeader;
+import org.apache.shardingsphere.proxy.backend.session.ConnectionSession;
 import org.apache.shardingsphere.proxy.backend.text.data.DatabaseBackendHandler;
-import org.apache.shardingsphere.sql.parser.sql.common.statement.SQLStatement;
 
 import java.sql.SQLException;
 import java.util.Collection;
+import java.util.Optional;
 
 /**
  * Database backend handler with unicast schema.
@@ -39,25 +42,43 @@ public final class UnicastDatabaseBackendHandler implements DatabaseBackendHandl
     
     private final DatabaseCommunicationEngineFactory databaseCommunicationEngineFactory = DatabaseCommunicationEngineFactory.getInstance();
     
-    private final SQLStatement sqlStatement;
+    private final SQLStatementContext<?> sqlStatementContext;
     
     private final String sql;
     
-    private final BackendConnection backendConnection;
+    private final ConnectionSession connectionSession;
     
     private DatabaseCommunicationEngine databaseCommunicationEngine;
     
     @Override
+    public Future<ResponseHeader> executeFuture() {
+        String originSchema = connectionSession.getSchemaName();
+        String schemaName = null == originSchema ? getFirstSchemaName() : originSchema;
+        if (!ProxyContext.getInstance().getMetaData(schemaName).hasDataSource()) {
+            throw new RuleNotExistedException();
+        }
+        connectionSession.setCurrentSchema(schemaName);
+        databaseCommunicationEngine = databaseCommunicationEngineFactory.newTextProtocolInstance(sqlStatementContext, sql, connectionSession.getBackendConnection());
+        return ((Future<ResponseHeader>) databaseCommunicationEngine.execute()).eventually(unused -> {
+            connectionSession.setCurrentSchema(originSchema);
+            return Future.succeededFuture();
+        });
+    }
+    
+    @Override
     public ResponseHeader execute() throws SQLException {
-        if (null == backendConnection.getSchemaName()) {
-            // TODO should remove set default ShardingSphere schema after parser can recognize all DAL broadcast SQL.
-            backendConnection.setCurrentSchema(getFirstSchemaName());
+        String originSchema = connectionSession.getDefaultSchemaName();
+        String schemaName = null == originSchema ? getFirstSchemaName() : originSchema;
+        if (!ProxyContext.getInstance().getMetaData(schemaName).hasDataSource()) {
+            throw new RuleNotExistedException();
         }
-        if (!ProxyContext.getInstance().getMetaData(backendConnection.getSchemaName()).isComplete()) {
-            throw new RuleNotExistsException();
+        try {
+            connectionSession.setCurrentSchema(schemaName);
+            databaseCommunicationEngine = databaseCommunicationEngineFactory.newTextProtocolInstance(sqlStatementContext, sql, connectionSession.getBackendConnection());
+            return (ResponseHeader) databaseCommunicationEngine.execute();
+        } finally {
+            connectionSession.setCurrentSchema(originSchema);
         }
-        databaseCommunicationEngine = databaseCommunicationEngineFactory.newTextProtocolInstance(sqlStatement, sql, backendConnection);
-        return databaseCommunicationEngine.execute();
     }
     
     private String getFirstSchemaName() {
@@ -65,7 +86,11 @@ public final class UnicastDatabaseBackendHandler implements DatabaseBackendHandl
         if (schemaNames.isEmpty()) {
             throw new NoDatabaseSelectedException();
         }
-        return schemaNames.iterator().next();
+        Optional<String> result = schemaNames.stream().filter(each -> ProxyContext.getInstance().getMetaData(each).hasDataSource()).findFirst();
+        if (!result.isPresent()) {
+            throw new RuleNotExistedException();
+        }
+        return result.get();
     }
     
     @Override
@@ -76,5 +101,12 @@ public final class UnicastDatabaseBackendHandler implements DatabaseBackendHandl
     @Override
     public Collection<Object> getRowData() throws SQLException {
         return databaseCommunicationEngine.getQueryResponseRow().getData();
+    }
+    
+    @Override
+    public void close() throws SQLException {
+        if (databaseCommunicationEngine instanceof JDBCDatabaseCommunicationEngine) {
+            ((JDBCDatabaseCommunicationEngine) databaseCommunicationEngine).close();
+        }
     }
 }

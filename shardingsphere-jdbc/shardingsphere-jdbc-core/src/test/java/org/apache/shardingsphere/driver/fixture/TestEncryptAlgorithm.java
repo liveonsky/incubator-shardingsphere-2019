@@ -17,21 +17,22 @@
 
 package org.apache.shardingsphere.driver.fixture;
 
+import org.apache.shardingsphere.encrypt.spi.context.EncryptContext;
 import org.apache.shardingsphere.encrypt.spi.EncryptAlgorithm;
 
-public final class TestEncryptAlgorithm implements EncryptAlgorithm {
+public final class TestEncryptAlgorithm implements EncryptAlgorithm<Object, String> {
     
     @Override
     public void init() {
     }
     
     @Override
-    public String encrypt(final Object plaintext) {
+    public String encrypt(final Object plainValue, final EncryptContext encryptContext) {
         return "encryptValue";
     }
     
     @Override
-    public Object decrypt(final String ciphertext) {
+    public Object decrypt(final String cipherValue, final EncryptContext encryptContext) {
         return "decryptValue";
     }
     

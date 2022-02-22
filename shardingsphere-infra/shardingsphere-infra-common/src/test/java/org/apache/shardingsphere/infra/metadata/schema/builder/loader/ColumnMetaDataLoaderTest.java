@@ -18,6 +18,7 @@
 package org.apache.shardingsphere.infra.metadata.schema.builder.loader;
 
 import org.apache.shardingsphere.infra.database.type.DatabaseType;
+import org.apache.shardingsphere.infra.metadata.schema.builder.loader.common.ColumnMetaDataLoader;
 import org.apache.shardingsphere.infra.metadata.schema.model.ColumnMetaData;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +38,7 @@ import java.util.Iterator;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -69,7 +71,6 @@ public final class ColumnMetaDataLoaderTest {
         when(columnResultSet.getString("TABLE_NAME")).thenReturn("tbl");
         when(columnResultSet.getString("COLUMN_NAME")).thenReturn("pk_col", "col");
         when(columnResultSet.getInt("DATA_TYPE")).thenReturn(Types.INTEGER, Types.VARCHAR);
-        when(columnResultSet.getString("TYPE_NAME")).thenReturn("INT", "VARCHAR");
         when(connection.createStatement().executeQuery(anyString())).thenReturn(caseSensitivesResultSet);
         when(caseSensitivesResultSet.findColumn("pk_col")).thenReturn(1);
         when(caseSensitivesResultSet.findColumn("col")).thenReturn(2);
@@ -79,17 +80,16 @@ public final class ColumnMetaDataLoaderTest {
     
     @Test
     public void assertLoad() throws SQLException {
-        Collection<ColumnMetaData> actual = ColumnMetaDataLoader.load(connection, "tbl", mock(DatabaseType.class));
+        Collection<ColumnMetaData> actual = ColumnMetaDataLoader.load(connection, "tbl", mock(DatabaseType.class, RETURNS_DEEP_STUBS));
         assertThat(actual.size(), is(2));
         Iterator<ColumnMetaData> columnMetaDataIterator = actual.iterator();
-        assertColumnMetaData(columnMetaDataIterator.next(), "pk_col", Types.INTEGER, "INT", true, true);
-        assertColumnMetaData(columnMetaDataIterator.next(), "col", Types.VARCHAR, "VARCHAR", false, false);
+        assertColumnMetaData(columnMetaDataIterator.next(), "pk_col", Types.INTEGER, true, true);
+        assertColumnMetaData(columnMetaDataIterator.next(), "col", Types.VARCHAR, false, false);
     }
     
-    private void assertColumnMetaData(final ColumnMetaData actual, final String name, final int dataType, final String typeName, final boolean primaryKey, final boolean caseSensitive) {
+    private void assertColumnMetaData(final ColumnMetaData actual, final String name, final int dataType, final boolean primaryKey, final boolean caseSensitive) {
         assertThat(actual.getName(), is(name));
         assertThat(actual.getDataType(), is(dataType));
-        assertThat(actual.getDataTypeName(), is(typeName));
         assertThat(actual.isPrimaryKey(), is(primaryKey));
         assertThat(actual.isCaseSensitive(), is(caseSensitive));
     }
